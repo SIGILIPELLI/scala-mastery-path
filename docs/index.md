@@ -1,3 +1,8 @@
+---
+title: "Learn Scala Free: Beginner to Master Course"
+description: "Free Scala course from beginner to advanced -- hands-on lessons with runnable code and real capstone projects. Part of a 37-course free learning library."
+---
+
 # Scala Mastery Path
 
 A structured, module-wise Scala training program that takes you from your first
