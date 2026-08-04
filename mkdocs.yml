@@ -62,8 +62,19 @@ nav:
       - "08 · Pattern Matching Intro": level-1/08-pattern-matching-intro.md
       - "09 · Traits Basics": level-1/09-traits-basics.md
       - "10 · Project — CLI To-Do App": level-1/10-project-todo-app.md
+  - "Level 2 · Intermediate":
+      - Overview: level-2/index.md
+      - "01 · OOP Deep Dive": level-2/01-oop-deep-dive.md
+      - "02 · Pattern Matching Advanced": level-2/02-pattern-matching-advanced.md
+      - "03 · Collections Deep Dive": level-2/03-collections-deep-dive.md
+      - "04 · Option/Either for Error Handling": level-2/04-option-either.md
+      - "05 · Testing with ScalaTest": level-2/05-scalatest-testing.md
+      - "06 · Implicits Basics": level-2/06-implicits-basics.md
+      - "07 · Working with JSON": level-2/07-working-with-json.md
+      - "08 · sbt Deep Dive": level-2/08-sbt-deep-dive.md
+      - "09 · For-Comprehensions": level-2/09-for-comprehensions.md
+      - "10 · Project — Weather CLI": level-2/10-project-weather-cli.md
 # --- auto-pruned stub levels (see AdSense low-value-content fix) ---
 exclude_docs: |
-  level-2/*.md
   level-3/*.md
   level-4/*.md
