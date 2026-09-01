@@ -1,8 +1,8 @@
 site_name: Scala Mastery Path
 site_description: A structured, module-wise Scala training program from entry level to master level.
-site_url: https://sigilipelli.github.io/scala-skillmastery/
-repo_url: https://github.com/SIGILIPELLI/scala-skillmastery
-repo_name: scala-skillmastery
+site_url: https://sigilipelli.github.io/scala-mastery-path/
+repo_url: https://github.com/SIGILIPELLI/scala-mastery-path
+repo_name: scala-mastery-path
 
 theme:
   name: material
