@@ -1177,6 +1177,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2272,6 +2283,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2436,6 +2458,8 @@ otherwise "exhaustive-looking" Scala code:</p>
 </code></pre></div>
 <p>Always give a guard chain a final unguarded <code>case _ =&gt;</code>, exactly as you
 would for matching on an open (non-sealed) type.</p>
+<h2 id="how-it-actually-works">How It Actually Works<a class="headerlink" href="#how-it-actually-works" title="Permanent link">&para;</a></h2>
+<p><code>match</code> compiles to a decision tree, not a chain of <code>if</code>/<code>else</code> — the compiler analyzes your patterns' structure (type tags, <code>case class</code> field arity, sealed hierarchy membership) and can generate a jump table or nested type-tests, which is why matching is often <em>faster</em> than the equivalent hand-written conditionals. An extractor's <code>unapply</code> is called directly by the generated match code: <code>case Some(x) =&gt;</code> literally compiles to a call to <code>Option</code>'s <code>unapply</code>, which returns a value the compiler treats as present-or-absent (historically <code>Option[T]</code>, now often a <code>Boolean</code>+accessor pair for performance) — there's no reflection involved, it's a plain static method call resolved at compile time. Exhaustiveness checking works by the compiler statically enumerating every subtype of a <code>sealed</code> trait at compile time, which is exactly why it silently stops protecting you the moment you add a <code>case _ if condition =&gt;</code> guard: the compiler can prove all <em>cases</em> are covered, but it can't prove all <em>values</em> satisfy your guard, so it has to assume they might not.</p>
 <h2 id="cheat-sheet">Cheat sheet<a class="headerlink" href="#cheat-sheet" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

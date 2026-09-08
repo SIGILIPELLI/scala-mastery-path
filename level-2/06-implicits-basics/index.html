@@ -1289,6 +1289,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2272,6 +2283,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2441,6 +2463,8 @@ per type that has that capability — is called a <strong>type class</strong>, a
 exactly how <a href="../07-working-with-json/">Module 7 · Working with JSON</a>'s
 encoders/decoders work under the hood. <a href="../../level-3/06-type-classes/">Level 3</a>
 covers type classes properly, including writing your own generic ones.</p>
+<h2 id="how-it-actually-works">How It Actually Works<a class="headerlink" href="#how-it-actually-works" title="Permanent link">&para;</a></h2>
+<p>When the compiler sees a <code>using</code> parameter it can't find at the call site, it doesn't fail immediately — it searches an implicit scope built from the local scope outward, then the companion objects of every type involved in the parameter's type signature, collecting every <code>given</code> that type-checks as a candidate. If more than one candidate matches, specificity rules (a <code>given</code> in a narrower scope, or one whose type is a subtype of another candidate's) decide the winner at <em>compile</em> time — there's no runtime lookup at all, the compiler bakes in a direct reference to the winning value, which is why an ambiguous-implicit error is a compile failure, not a runtime one. Extension methods work by the same resolution mechanism: <code>obj.method()</code> where <code>method</code> isn't defined on <code>obj</code>'s type triggers the compiler to search for an extension whose receiver type matches, then rewrites the call as if you'd written the extension's defining function directly.</p>
 <h2 id="cheat-sheet">Cheat sheet<a class="headerlink" href="#cheat-sheet" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

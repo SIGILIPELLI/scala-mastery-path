@@ -1384,6 +1384,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2294,6 +2305,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2466,6 +2488,8 @@ always means "all generators must be the same kind of container" (all
 type-mismatch error, the first thing to check is whether every generator
 really is the same kind of container — the error message rarely says that
 directly.</p>
+<h2 id="how-it-actually-works">How It Actually Works<a class="headerlink" href="#how-it-actually-works" title="Permanent link">&para;</a></h2>
+<p>The compiler literally rewrites your <code>for</code> block before it ever reaches type-checking: each <code>x &lt;- xs</code> becomes a <code>flatMap</code> (except the last generator, which becomes <code>map</code>), each <code>if</code> guard becomes a <code>withFilter</code> call, and <code>yield</code> supplies the function body — so a <code>for</code> over <code>Option</code>, <code>List</code>, or <code>Future</code> all "just work" because each of those types independently implements <code>map</code>/<code>flatMap</code>/<code>withFilter</code> with its own semantics (an <code>Option</code>'s <code>flatMap</code> short-circuits on <code>None</code>, a <code>Future</code>'s runs the next step on a different thread once the prior one completes). Short-circuiting isn't special-cased into <code>for</code> at all — it falls straight out of how each container's own <code>flatMap</code> decides whether to call the function you pass it.</p>
 <h2 id="cheat-sheet">Cheat sheet<a class="headerlink" href="#cheat-sheet" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
