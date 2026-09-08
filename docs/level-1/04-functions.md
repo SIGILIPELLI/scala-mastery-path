@@ -113,6 +113,35 @@ If a function marked `@tailrec` isn't actually tail-recursive, the compiler
 raises an error at compile time rather than letting you discover a
 `StackOverflowError` later at runtime — a nice safety net.
 
+## How It Actually Works
+
+A plain `def` compiles to an ordinary JVM instance (or static) method — no
+surprises there. The interesting mechanism is what happens when you turn a
+method into a *value* with `val addFn = add` or write a lambda: Scala
+compiles that into an instance of a `scala.FunctionN` interface (`Function1`
+for one argument, `Function2` for two, and so on, up to 22 — the historic
+reason Scala tuples and function arities top out at 22). Each `FunctionN`
+trait defines an `apply` method, so `addFn(3, 4)` is really sugar for
+`addFn.apply(3, 4)`. A lambda like `(x: Int) => x * 2` becomes, since Scala
+2.12+, an `invokedynamic` call site backed by Java's `LambdaMetafactory` —
+the JVM generates the implementing class at runtime the first time that
+call site executes and caches it, rather than the compiler pre-generating a
+named anonymous class for every lambda the way older Scala/Java did. This
+is why lambdas are cheap but not entirely free: the first invocation of a
+given lambda literal pays a one-time class-generation cost.
+
+Recursion has no special bytecode support on the JVM (no built-in
+tail-call instruction), so a recursive `def` normally consumes one stack
+frame per call and can overflow on deep recursion. The Scala compiler
+optimizes the specific case of **self-tail-recursion** — a call to the
+function itself in tail position — by rewriting it into a `while`-style
+loop with mutated local variables, eliminating the stack growth entirely.
+`@tailrec` doesn't enable this optimization; it only asks the compiler to
+*fail the build* if the rewrite ISN'T possible, catching accidental
+non-tail recursion (e.g. `n * factorial(n - 1)`, where the multiplication
+happens after the recursive call returns) at compile time instead of as a
+`StackOverflowError` at runtime.
+
 ## Cheat sheet
 
 | Syntax | Meaning |

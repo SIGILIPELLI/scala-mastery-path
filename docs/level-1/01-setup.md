@@ -136,6 +136,36 @@ refactoring, debugging, and sbt integration. **VS Code** with the "Metals"
 extension (a Scala language server) is a strong free/lightweight alternative.
 Either works well for everything in this course.
 
+## How It Actually Works
+
+`sbt run` isn't one step — it's a pipeline. First the Scala compiler
+(`scalac`, invoked by sbt's incremental compiler, Zinc) parses `Hello.scala`
+into an abstract syntax tree, type-checks it, and lowers it to **JVM
+bytecode** — `.class` files under `target/scala-3.x/classes/`. `@main def
+hello(): Unit = ...` doesn't compile to a bare function (the JVM has no
+concept of a free-floating function); the compiler synthesizes a real class
+(something like `hello`) with a `public static void main(String[] args)`
+method whose body calls your `hello()` logic, because the JVM's process
+entry point has always been "a class with a `main` method," a convention
+inherited from Java. That's the actual mechanism `@main` hides from you.
+
+Zinc's *incrementality* is why the second `sbt run` is fast: it tracks which
+source files' compiled output (bytecode + a dependency graph of which
+classes reference which) is still valid, and only recompiles files whose
+source or transitive dependencies changed — full whole-project recompiles
+happen only on a clean build or a change that ripples widely (e.g. editing a
+trait extended everywhere).
+
+Once compiled, `java` (which `sbt run` shells out to under the hood, with the
+project's dependency jars on the classpath) loads the class, and the JVM's
+class loader resolves `println` to `scala.Predef.println`, which itself
+delegates to `System.out.println` — Scala's "standard library extras" layer
+sitting on top of the JVM's own `java.lang`/`java.io` classes. This is also
+why Scala interoperates so smoothly with Java libraries: after compilation
+there's no meaningful difference between a `.class` file that came from
+`.scala` source and one that came from `.java` source — the JVM only sees
+bytecode.
+
 ## Exercise
 
 Create a new sbt project named `greeter`. Add a `@main` entry point that

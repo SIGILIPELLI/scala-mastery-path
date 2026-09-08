@@ -121,6 +121,44 @@ println(current)   // Green
 [Module 9](09-traits-basics.md); Scala 3's `enum` — often a cleaner fit for
 this exact pattern — appears in [Level 4](../level-4/08-scala-3-features.md).)
 
+## How It Actually Works
+
+When the compiler sees `case class Point(x: Double, y: Double)`, it
+mechanically synthesizes an entire set of members on top of what an
+ordinary `class` would generate — nothing here is a runtime trick, it all
+happens at compile time as extra bytecode:
+
+- **`equals`/`hashCode`** — generated to compare every constructor
+  parameter field-by-field (`equals`) and combine every field's hash code
+  via `MurmurHash3` (`hashCode`), rather than the default `Object.equals`
+  (reference identity) and `Object.hashCode` (identity hash) that a plain
+  `class` inherits from `java.lang.Object`. This is exactly why
+  `cp1 == cp2` is `true` for two separately-constructed `CasePoint(1, 2)`
+  values but `rp1 == rp2` is `false` for `RegularPoint` — `==` in Scala
+  calls `equals`, and only the case class overrides it.
+- **`toString`** — generated to print the class name and each field in
+  order, e.g. `"Point(" + x + "," + y + ")"`.
+- **A companion `object` with `apply`/`unapply`** — `apply` is the factory
+  method that makes `Point(3.0, 4.0)` work without `new` (see [Module
+  6](06-classes-objects.md)); `unapply` is what makes the case class usable
+  in pattern matching (`case Point(x, y) => ...`) — it takes an instance and
+  returns its fields as an `Option` of a tuple, which the compiler calls
+  behind the scenes every time a `match` tries this pattern.
+- **`copy`** — generated as a method with one named, defaulted parameter
+  per field, each parameter defaulting to `this.<field>`. `alice.copy(title
+  = "Senior Engineer")` compiles to a call passing your new value for
+  `title` and letting every other parameter fall back to its default,
+  which is simply reading the corresponding field off `alice` — so `copy`
+  is really just a constructor call with smart defaults, not special
+  language machinery.
+
+`case object` skips the `apply`/`copy`/constructor-parameter generation
+entirely (there's nothing to construct or copy) but still gets `toString`
+and reference-based `equals`/`hashCode` inherited from being a singleton —
+which is fine, since two `case object`s of the same type are always the
+same instance (see [Module 6](06-classes-objects.md) on how `object`
+compiles to a single `MODULE$` instance).
+
 ## Exercise
 
 Define `case class Book(title: String, author: String, year: Int, read: Boolean = false)`.

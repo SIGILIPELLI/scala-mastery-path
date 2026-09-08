@@ -128,6 +128,39 @@ test("total is always non-negative for non-negative prices") {
 }
 ```
 
+## How It Actually Works
+
+ScalaCheck's property-based testing works by pairing a `Gen[A]` (a
+generator) with your property function: `Gen[A]` is, mechanically, a
+thin wrapper around a `Random`-seeded function that produces values of
+type `A`, often composed from smaller generators via `map`/`flatMap` (the
+same monadic shape as `Option`/`Future` — see [Module
+4](04-functional-patterns.md)). When you run `forAll(genA) { a => property
+}`, ScalaCheck doesn't just generate arbitrary values once — it runs
+dozens of them (default 100 per property), and specifically also probes
+"edge" values it knows are often bug-prone (0, negative numbers, empty
+collections) before falling back to pure randomness, weighted by a "size"
+parameter that grows across the run to also exercise larger inputs. When a
+run finds a failing case, ScalaCheck **shrinks** it: it repeatedly tries
+smaller/simpler values that still fail the property (fewer list elements,
+smaller numbers) until it can't shrink further, which is why failures
+report a minimal reproducing example instead of some large random
+input.
+
+Mockito mocks work through **runtime bytecode generation**: `mock[Repo]`
+doesn't secretly create a real `Repo` — it uses a bytecode-generation
+library (historically CGLIB/ByteBuddy) to synthesize, at test-run time, a
+brand-new subclass (for a class) or dynamic proxy (for a trait/interface)
+of `Repo` whose every method is overridden to record the call it received
+and return a pre-programmed value (or a default like `null`/`0` if
+unstubbed) instead of running any real logic. `when(mock.find(1))
+.thenReturn(...)` works by first invoking the real method call (recorded
+by the mock's interceptor rather than executed), then attaching the
+return value to that recorded call signature for future invocations —
+which is why stubbing only works on methods the mocking library can
+actually override (final methods and most `object`s resist mocking, since
+there's no subclass point to intercept them through).
+
 ## Cheat sheet
 
 | Need to... | Use |

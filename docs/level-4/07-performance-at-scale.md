@@ -92,6 +92,42 @@ algorithm — needs a profiler (Level 3 mentioned JMH for microbenchmarks;
 async-profiler or Java Flight Recorder are the tools for profiling a whole
 running service) rather than guessing at flags.
 
+## How It Actually Works
+
+An in-memory cache backed by a plain mutable `Map` is a memory leak
+"with extra steps" for a garbage-collection reason: the JVM's GC reclaims
+an object only when nothing reachable still references it, and a
+never-evicted cache entry is, by definition, still referenced by the
+cache's own map — so the GC correctly considers it live and never
+collects it, no matter how stale or unused it's become. Bounded caches
+(LRU, size- or time-based eviction) solve this by actively removing
+entries themselves, making them unreachable and therefore GC-eligible,
+rather than relying on any GC feature to notice "this entry hasn't been
+touched in a while" — ordinary GC has no such notion.
+
+Thread pool sizing changes real throughput because of a very concrete
+JVM-level distinction: **CPU-bound** work keeps a core continuously busy
+computing, so a thread pool larger than the number of physical/logical
+cores just causes threads to context-switch for CPU time they can't all
+get simultaneously (each context switch itself has real cost — saving and
+restoring register state and cache lines) — throughput plateaus once
+threads ≈ cores. **I/O-bound** work (blocking on a socket or disk read,
+as in [Level 3's JDBC calls](../level-3/03-databases.md)) spends most of
+its time with the thread parked, not consuming CPU, so a larger pool
+lets more of that idle-waiting overlap productively; the right pool size
+there scales with how much time each task spends blocked vs. computing,
+not simply with core count.
+
+JVM-level tuning (heap sizing, garbage collector choice like G1 vs. ZGC)
+changes the trade-offs of the same underlying mechanism from [Level
+3](../level-3/08-performance-profiling.md)'s JIT/warmup discussion: a
+larger heap means the GC runs less often but each collection may pause
+longer (more objects to scan/relocate), while newer low-pause collectors
+like ZGC trade some throughput for keeping individual GC pauses in the
+sub-millisecond to few-millisecond range regardless of heap size — the
+right choice depends on whether your service cares more about maximum
+throughput or predictable low-latency response times.
+
 ## Cheat sheet
 
 | Need to... | Use |

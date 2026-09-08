@@ -110,6 +110,43 @@ containers that need the same logic (as here, `List`/`Option`/`Box`) — this
 is the same "don't abstract until you have two real cases" judgment call
 you already make with ordinary generics.
 
+## How It Actually Works
+
+"Kinds" describe types the same way types describe values — a concrete
+type like `Int` or `String` has kind `*` ("a fully-applied, instantiable
+type"), while `List` on its own (without a type argument) has kind `* ->
+*`: it's a function *from* a type *to* a type, taking one type parameter
+(`List[Int]` is `*`, but bare `List` is not directly instantiable). This
+is purely a compile-time classification the type checker maintains — it
+never appears in bytecode — but it's the exact reason `Functor[F[_]]`
+must be written with that underscore: it's declaring "`F` itself must have
+kind `* -> *`," and passing something of the wrong kind (like a fully
+concrete `Int`, kind `*`) is a kind mismatch, rejected before the program
+ever reaches type-checking of values — which is also why kind-mismatch
+errors read so cryptically: the compiler is reporting a mismatch one
+level of abstraction higher than the "wrong type" errors you're used to.
+
+At runtime, higher-kinded polymorphism vanishes almost entirely due to
+JVM **type erasure**: after compilation, `List[Int]` and `List[String]`
+are both just `List` (a raw class) — the JVM has no concept of generic
+type parameters at the bytecode level, only at the source/compile level
+via type-checking and inserted casts. A method generic over `F[_]`
+compiles to bytecode that manipulates `F`'s *erased* runtime
+representation (whatever concrete class you instantiated it with)
+uniformly, relying entirely on compile-time type checking to have already
+guaranteed the operations are valid — there's no runtime higher-kinded
+dispatch mechanism because the JVM doesn't preserve the information needed
+for one.
+
+"When higher-kinded abstraction stops paying for itself" is a real,
+measurable trade in exactly this light: every layer of `F[_]`
+abstraction is compile-time-only bookkeeping that adds indirection for a
+human reader (and sometimes an extra allocation, e.g. wrapping a value
+just to satisfy `Functor[F[_]]`'s shape) without changing what happens at
+the bytecode level once erasure and implicit resolution are done — the
+cost is legibility and compile time, not runtime performance, which is
+exactly the trade the module's rule of thumb is weighing.
+
 ## Cheat sheet
 
 | Concept | Meaning |

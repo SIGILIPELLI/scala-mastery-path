@@ -124,6 +124,29 @@ You'll see this pattern throughout the course: reach for collection methods
 [Level 2](../level-2/03-collections-deep-dive.md)) before reaching for a
 `var` and a loop.
 
+## How It Actually Works
+
+`if`/`else` being an *expression* rather than a statement is not just style
+— the compiler assigns it a type, computed as the least upper bound (the
+closest common supertype) of the `then` and `else` branch types. `if (x > 0)
+"positive" else -1` type-checks to `Any` (the LUB of `String` and `Int`) —
+usually a sign you meant something else, since `Any` erases most useful
+methods. When both branches agree on a type, bytecode-wise `if`/`else`
+compiles to ordinary conditional jump instructions (`ifeq`, `ifne`, `goto`)
+just like Java's `if` — the "expression" nature is purely a compile-time
+type-checking feature layered on top of the same JVM control-flow
+primitives.
+
+A Scala `for` loop over a range (`for i <- 1 to 5 do ...`) is not a JVM
+looping construct on its own — the compiler desugars it into calls on
+whatever `1 to 5` returns (a `Range`), specifically `foreach`, which
+internally runs an ordinary `while` loop over the range's `start`/`end`/
+`step` fields. A `while` loop, by contrast, compiles almost directly to
+JVM bytecode's `goto`-based loop shape with no allocation at all — which is
+why tight numeric loops in performance-sensitive Scala code sometimes still
+reach for `while` (see [Level 3's performance module](../level-3/08-performance-profiling.md))
+even though `for` and `foreach` read better.
+
 ## Cheat sheet
 
 | Construct | Purpose |

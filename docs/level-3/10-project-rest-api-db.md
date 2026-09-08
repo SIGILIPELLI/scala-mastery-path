@@ -161,6 +161,32 @@ fixed `Db.insert`.
 | `try`/`catch` around `handleInner` | Turns handler exceptions into a real `500` instead of a dropped connection |
 | `Executors.newFixedThreadPool` | Lets blocking JDBC calls run concurrently across requests |
 
+## How It Actually Works
+
+`Executors.newFixedThreadPool` matters here specifically because JDBC
+calls are **blocking** (see [Module 3](03-databases.md)) — each HTTP
+request handler that talks to the database parks its thread in a socket
+read while waiting on SQLite, so a fixed thread pool sized above 1 is what
+lets multiple requests' blocking database work actually overlap rather
+than serializing behind a single-threaded server loop. This is a
+deliberately different concurrency strategy from Akka's actor mailbox
+scheduling in [Module 9](09-akka-actors-basics.md) — here, concurrency
+comes from *many OS threads each blocking independently*, not from
+message-passing over a small pool, which is a reasonable trade for a
+small service but doesn't scale to the same connection counts an
+event-loop or actor-based design would.
+
+`try`/`catch` around `handleInner` converting exceptions into a `500`
+works because an uncaught exception propagating out of the code handling
+one connection would otherwise either crash that connection's thread
+(leaking the file descriptor / socket if the runtime doesn't clean it up)
+or, in HTTP server frameworks that don't guard this themselves, simply
+drop the connection with no response ever written to the socket — the
+client sees a bare connection reset rather than a real HTTP status line.
+Wrapping the handler is what guarantees *some* well-formed HTTP response
+always gets written, turning a JVM-level exception into an
+application-level status code instead of a protocol-level failure.
+
 ## Stretch goals
 
 - Add `PUT /tasks/{id}` to mark a task done, and `DELETE /tasks/{id}` to

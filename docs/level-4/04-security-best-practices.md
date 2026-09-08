@@ -125,6 +125,47 @@ Skipping this step — treating "the token is valid" as "the request is
 allowed" — is how services end up letting any logged-in user perform
 admin-only actions.
 
+## How It Actually Works
+
+Password hashing algorithms built for this purpose (bcrypt, scrypt,
+Argon2) are deliberately **slow and memory-hard** at the CPU/hardware
+level — bcrypt, for instance, runs a configurable number of rounds of a
+Blowfish-derived key schedule specifically designed to resist
+GPU/ASIC-based brute-force parallelization, unlike a general-purpose hash
+like SHA-256 which is *fast* by design (great for checksums, terrible for
+password storage, since fast hashing is exactly what makes brute-forcing
+cheap). Each hash also embeds a random **salt** generated per password,
+which is mixed into the hashing computation — this is the mechanical
+reason two users with the identical password get completely different
+stored hashes, defeating precomputed rainbow-table lookups.
+
+Comparing hashes with plain `==` is a real vulnerability because `==` on
+byte arrays or strings in most runtimes short-circuits at the first
+differing byte — an attacker measuring response time across many guesses
+can statistically infer how many leading bytes matched, incrementally
+reconstructing the hash. A **constant-time comparison** function walks
+every byte regardless of where a mismatch occurs (typically by XOR-ing
+corresponding bytes and OR-ing the results into an accumulator, only
+checking "was the accumulator ever nonzero" at the very end) so the
+comparison takes the same wall-clock time whether the first byte differs
+or the last one does.
+
+A signed token (JWT) is three base64url-encoded segments —
+header, payload (claims), and a signature — where the signature is an
+HMAC or RSA/ECDSA computation over the first two segments using a secret
+or private key only the server holds. Verifying a token means
+recomputing that same signature over the received header+payload and
+comparing it (constant-time, per above) against the signature segment
+the client sent — since forging a valid signature without the key is
+computationally infeasible, this is what makes the payload trustworthy
+without the server needing to store any session state per token. The
+"authentication proves identity, not permission" trap is a design fact
+independent of this mechanism: a validly-signed token proves *who signed
+off on these claims* (the server, when it issued the token to a specific
+user) — whether that user is *allowed* to perform a given action is a
+separate authorization check the application must still perform against
+the claims, since nothing about signature validity implies permission.
+
 ## Cheat sheet
 
 | Need to... | Use |

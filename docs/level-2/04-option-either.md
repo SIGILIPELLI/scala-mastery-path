@@ -169,6 +169,38 @@ println(opts.flatten)       // List(1, 3)
 println(opts.flatten.sum)   // 4
 ```
 
+## How It Actually Works
+
+`Option[A]` is itself a `sealed trait` with exactly two subtypes: `Some(a)`
+(a case class wrapping one value) and `None` (a `case object` — see
+[Level 1's case classes module](../level-1/07-case-classes.md)). There's no
+runtime magic distinguishing "a value" from "absence" beyond ordinary
+subtype polymorphism and pattern matching — `option.map(f)` is defined as a
+plain `match`: `case Some(a) => Some(f(a))`, `case None => None`. Because
+`Option` is sealed, the compiler can exhaustiveness-check any `match` over
+it, which is part of why idiomatic Scala reaches for `Option` instead of
+`null`: the compiler can prove every case is handled, whereas nothing stops
+a `String` typed value from silently being `null` at runtime and blowing up
+later with a `NullPointerException` the compiler had no way to flag.
+
+`for`-comprehensions over `Option`/`Either` (covered fully in [Module
+9](09-for-comprehensions.md)) desugar to chained `flatMap`/`map` calls, so
+`for { a <- opt1; b <- opt2 } yield a + b` becomes `opt1.flatMap(a =>
+opt2.map(b => a + b))`. This is exactly why the whole chain short-circuits
+on the first `None`/`Left`: `flatMap` on `None` is defined to just return
+`None` without ever calling the function you passed it, so evaluation
+never reaches the later steps — it's ordinary method dispatch, not special
+control-flow.
+
+`Try` wraps this same `map`/`flatMap` interface around a computation that
+might throw, and its mechanism is a `try`/`catch` block around your
+by-name argument at construction time: `Try(risky())` evaluates `risky()`
+immediately inside a `try`, wrapping a thrown exception in `Failure(e)` and
+a normal result in `Success(v)`. Because `Failure` and `Success` share
+`Try`'s `map`/`flatMap` interface with `Option`'s `Some`/`None`, the same
+short-circuiting chain logic applies — a `Failure` anywhere in a chain
+propagates untouched to the end, same as `None`.
+
 ## Cheat sheet
 
 | Type | Success case | Failure case | Carries a reason? |

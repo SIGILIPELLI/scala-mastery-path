@@ -107,6 +107,43 @@ of type classes (missing behavior is caught at compile time), but the error
 message is easy to misread as "context bound syntax is broken" when the
 real issue is simply a missing `given`.
 
+## How It Actually Works
+
+A type class method call like `show(42)` (where `show` requires `using
+Show[Int]`) compiles down to ordinary parameter passing — nothing about
+it is dynamic dispatch on a value's runtime class the way interface
+inheritance is. The compiler performs **implicit resolution** entirely at
+compile time: at the call site, it searches (in order) the local scope,
+then explicitly imported implicits, then the **implicit scope** of the
+type involved — which includes the companion objects of `Show` itself and
+of the type being shown — for a value of type `Show[Int]`. Once found, it
+rewrites `show(42)` into `show(42)(givenShowInt)`, passing the found
+instance as a completely ordinary extra method argument. This is why
+"adding an instance for your own type — no inheritance needed" works: the
+compiler doesn't care how `MyType` was declared, only whether a
+`Show[MyType]` value is *findable* by this search at the call site — the
+type class instance and the type it describes can live in totally
+unrelated code, unlike interface implementation which requires the type
+itself to declare `extends`.
+
+"Ambiguous or missing instances" are both compile-time failures of this
+exact search: missing means the search came up empty across every scope
+checked; ambiguous means it found two equally-specific candidates with no
+tiebreaker (companion-object implicits placed to be "more specific" than
+imported ones is a deliberate priority rule in the search, precisely to
+reduce accidental ambiguity). Because the whole thing resolves before your
+program runs, there's no runtime cost analogous to a virtual method
+table lookup or `instanceof` check — the "dispatch" is baked into the
+compiled bytecode as a specific instance reference passed at the call
+site.
+
+Extension methods (`42.showit` calling `Show[Int]`'s logic) compile via
+an implicit conversion or Scala 3's `extension` syntax into essentially
+the same rewrite: `42.showit` becomes a call to a synthesized wrapper
+whose only job is to forward to `Show[Int].show(42)` — the "nicer call
+site" is purely a compile-time rewrite, with the actual work still
+happening inside the type class instance's method body.
+
 ## Cheat sheet
 
 | Need to... | Use |

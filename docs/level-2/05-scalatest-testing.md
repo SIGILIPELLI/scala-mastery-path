@@ -171,6 +171,40 @@ Each test sees a freshly reset `buffer`, so append side effects in one test
 never leak into another — a common source of order-dependent, flaky test
 suites when fixtures are shared without a reset.
 
+## How It Actually Works
+
+ScalaTest's `AnyFunSuite` and `AnyFlatSpec` look like two different DSLs,
+but both compile down to the same underlying model: each `test("...") {
+... }` or `"it" should "..." in { ... }` block is registered, at
+*construction time* (when the test class's constructor runs), into an
+internal list of test cases held by the suite instance — the string
+becomes a key, and the block becomes a closure (compiled to a `Function0`,
+see [Module 4's functions-as-values](../level-1/04-functions.md)) stored
+against it. Running the suite doesn't re-read your source; it just
+iterates that already-built list and invokes each closure, catching any
+thrown exception (including a failed `assert` or matcher, which work by
+throwing a `TestFailedException`) to report pass/fail without one test's
+exception aborting the whole run.
+
+Matchers like `result should be(5)` and `list should contain(3)` are
+ordinary method calls chained together using Scala's ability to define
+methods with symbolic or word-like names and to omit dots/parens in
+infix position: `should` is a method on an implicit wrapper class around
+`result`, taking `be(5)` — itself a small "matcher" object — as its
+argument. There's no keyword `should` in the language; it's a library
+convention built entirely from implicit conversions (see [Module
+6](06-implicits-basics.md)) and Scala's flexible method-call syntax, which
+is also why writing your own custom matcher is "just" implementing the
+right trait rather than hooking into compiler internals.
+
+Fixtures that recreate state per test (rather than sharing one mutable
+instance across tests) matter because sbt normally runs all tests in a
+suite against **one shared instance** of that suite class by default —
+if a `var` were declared directly in the class body instead of freshly set
+up per test via a fixture method, test order could leak state between
+tests non-deterministically, which is precisely the bug fixtures are
+designed to make structurally impossible.
+
 ## Cheat sheet
 
 | Style | Test declared as | Reads like |

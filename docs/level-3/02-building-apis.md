@@ -125,6 +125,40 @@ println(toResponse(ApiResult.Ok("""{"id":1}""")))          // (200,{"id":1})
 println(toResponse(ApiResult.NotFound("user")))            // (404,{"error":"user not found"})
 ```
 
+## How It Actually Works
+
+Underneath any Scala HTTP library sits the same primitive: a
+`java.net.ServerSocket` (or, in async servers, Java NIO's
+`ServerSocketChannel`) bound to a port, `accept()`-ing incoming TCP
+connections in a loop. Each accepted connection hands you a raw byte
+stream that the library parses according to the HTTP/1.1 text protocol —
+request line, headers, optional body — into the request object your
+handler function receives. "Routing by method and path" is nothing more
+than pattern matching (see [Level 1's pattern-matching
+module](../level-1/08-pattern-matching-intro.md)) over the parsed
+`(method, path)` pair extracted from that request line; there's no
+special HTTP-routing bytecode, just ordinary `match` dispatch layered on
+top of string parsing.
+
+A "minimal HTTP server" handling one connection per accepted socket, if
+built the naive blocking way, spends one JVM thread per open connection —
+that thread sits blocked in a socket read until the client sends its next
+byte, which is why production frameworks either use a thread pool sized
+to expected concurrency or, more commonly today, an event-loop /
+non-blocking I/O model (Java NIO's selectors, or Akka HTTP's
+actor-and-Future-based pipeline built on the concurrency primitives from
+[Module 1](01-futures-concurrency.md)) so thousands of idle connections
+don't each tie up a full OS thread.
+
+Returning a status code "as data" (an `Int` or enum you compute, rather
+than calling an imperative `.setStatus(200)` and returning `void`) works
+because the response is ultimately just bytes written to the same output
+stream in a specific text format (`HTTP/1.1 200 OK\r\n...`) — treating the
+status as a return value your handler produces, rather than a side effect
+it performs, is a design choice the library makes; the JVM-level mechanism
+underneath is the same either way: bytes serialized onto the socket's
+output stream in HTTP's specified order.
+
 ## Cheat sheet
 
 | Need to... | Use |

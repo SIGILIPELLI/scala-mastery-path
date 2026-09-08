@@ -112,6 +112,35 @@ val (lo, hi) = minMax(List(4, 1, 9, 2))
 println(s"low=$lo, high=$hi")   // low=1, high=9
 ```
 
+## How It Actually Works
+
+Scala's immutable `List` is a **singly-linked list** under the hood — `Nil`
+(empty list) and `::` (cons cell) all the way down. `List(1, 2, 3)` is
+literally sugar for `1 :: 2 :: 3 :: Nil`, three heap-allocated `::` objects
+each holding a head value and a reference to the rest. This is exactly why
+`list.head` and `list.tail` are O(1) (just reads a field) while
+`list.last` and `list(index)` are O(n) (you must walk every cons cell) —
+and why prepending (`x :: list`) is cheap (one new cell, structural sharing
+with the existing list) while appending (`list :+ x`) is expensive (the
+whole list must be copied, since the original cells are immutable and can't
+be told to point somewhere new).
+
+`Map` and `Set` are backed by **hash array mapped tries (HAMTs)** in their
+default immutable form — a tree structure keyed by chunks of each element's
+hash code, giving effectively O(1) lookup/insert/remove (technically
+O(log₃₂ n), but that's ~1 for any realistic size) while still supporting
+structural sharing: `map + (k -> v)` returns a new `Map` that shares most of
+its internal tree nodes with the original rather than copying the whole
+structure, which is how Scala keeps "immutable everything" from being
+prohibitively expensive.
+
+Tuples (`(1, "a", true)`) are a family of generic classes `Tuple1` through
+`Tuple22` (pre–Scala 3) or Scala 3's more flexible tuple encoding — each is
+just a small final class holding its elements as fields `_1`, `_2`, etc.
+`._1` access compiles to a direct field read, and pattern-matching a tuple
+(`case (x, y) => ...`) compiles to calls to those same accessors rather
+than any special tuple machinery.
+
 ## Cheat sheet
 
 | Collection | Ordered? | Duplicates? | Key operations |

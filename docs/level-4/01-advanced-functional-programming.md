@@ -121,6 +121,43 @@ starting
 sum: 42
 ```
 
+## How It Actually Works
+
+A `Monad[F[_]]` is mechanically nothing beyond a `Functor` (from [Level
+3](../level-3/04-functional-patterns.md)) plus `flatMap` and `pure`
+(wrap a raw value), and `for`-comprehensions are literally defined by the
+compiler as syntax that desugars to `flatMap`/`map` calls — there's no
+independent "monad" concept the compiler understands; it just requires
+whatever type you use in a `for` to have methods named `flatMap` and `map`
+with compatible signatures (this is *structural*, not nominal: your type
+doesn't need to extend any `Monad` trait for `for` to work on it, it just
+needs the right method shapes). Why `Validated` deliberately isn't a
+monad comes down to `flatMap`'s own signature: `flatMap` must decide what
+to do based on the result of the *previous* step before it can even
+construct the next one, which structurally forces short-circuiting on
+failure — there's no way to write a lawful `flatMap` for `Validated` that
+also accumulates multiple independent failures, because by the time
+`flatMap` is called, only one failure (or success) is available to
+inspect. `mapN` sidesteps this by not chaining at all: it takes several
+already-computed `Validated` values up front and combines them with a
+function that only runs if *all* are `Valid`, so failures from
+independent steps can all be accumulated by `Validated`'s own `combine`
+logic (a `Monoid`-like operation) before any short-circuiting would need
+to happen.
+
+Cats Effect's `IO[A]` fixes a subtlety `Future` has by construction:
+`Future(sideEffect())` runs `sideEffect()` **eagerly**, the instant the
+`Future` is constructed, on whatever `ExecutionContext` is implicitly in
+scope — meaning a `val` binding a `Future` has already started work
+before anything reads it. `IO` instead compiles down to a **data
+structure describing a computation** (a tree of suspended thunks and
+combinators, not a running computation) and does nothing until you
+explicitly call `.unsafeRunSync()` or hand it to the Cats Effect runtime —
+which is why `IO` is referentially transparent (an `IO` value can be
+passed around, reused, or discarded with fully predictable behavior,
+never triggering a side effect just by existing) while a `Future` value
+already represents work in flight the moment you have one.
+
 ## Cheat sheet
 
 | Concept | What it gives you |

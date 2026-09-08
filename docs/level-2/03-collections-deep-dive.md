@@ -153,6 +153,42 @@ and `Vector` are effectively constant time. If you're checking membership
 repeatedly, convert to a `Set` once; if you're indexing repeatedly, use a
 `Vector`.
 
+## How It Actually Works
+
+`map`, `filter`, and `flatMap` on a strict collection like `List` are each
+a full, eager pass: `list.map(f).filter(g)` allocates an entire intermediate
+list from `map` before `filter` even starts, then allocates a second list
+for the filtered result — two full traversals and two heap allocations of
+list nodes, even though logically you only care about the final elements.
+`fold`/`reduce` avoid that by threading an accumulator through a single
+traversal, applying the combining function to each element as it goes —
+which is also why `foldLeft` is stack-safe for large collections (it
+compiles down to an iterative loop over the list's cons cells) while a
+naive hand-written recursive combine over the same list could stack
+overflow.
+
+A **lazy view** (`list.view.map(f).filter(g)`) restructures this
+completely: instead of eagerly building intermediate collections, `.view`
+wraps the underlying collection in a chain of small transformer objects
+that record *what* to do without doing it. Nothing actually runs element-by
+element until you call a "strict" operation like `.toList` or `.force` —
+at that point, each element is pulled through the whole chain of
+transformations one at a time, so `map` and `filter` fuse into a single
+pass with zero intermediate collections. This is exactly the same
+lazy-evaluation idea behind `Iterator`, and it's why views pay off most on
+large collections or chains, and can cost more than they save on tiny
+ones (the wrapping overhead isn't free).
+
+`groupBy` builds its result using the same hash-trie `Map` machinery
+described in [Level 1's collections module](../level-1/05-collections-basics.md)
+— it does one pass computing each element's key via your function,
+accumulating elements into growable buffers per key, then converts those
+buffers to the final `List`s in a second pass. `partition` is a
+specialization of the same idea with exactly two buckets (`true`/`false`)
+computed in a single traversal, which is why `partition(p)` is faster than
+the equivalent `(list.filter(p), list.filterNot(p))` — that alternative
+walks the source list twice.
+
 ## Cheat sheet
 
 | Method | Input → Output | Empty-safe? |

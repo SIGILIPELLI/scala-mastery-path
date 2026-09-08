@@ -126,6 +126,45 @@ finally
 // transaction committed
 ```
 
+## How It Actually Works
+
+JDBC's `Connection` object represents one live TCP socket to the database
+server (plus protocol-level session state — auth, current transaction,
+cursors) — which is exactly why "connections aren't free": each one holds
+an OS socket file descriptor and server-side session memory, so opening
+one per query rather than pooling them means paying a full TCP
+handshake plus the database's own authentication/session-setup round trip
+on every single call. A `DataSource`-based connection pool keeps a set of
+already-authenticated `Connection`s open and hands them out/reclaims them,
+avoiding that repeated setup cost.
+
+A `PreparedStatement` is the actual mechanism that closes the SQL
+injection hole, and it's a real protocol-level distinction, not just
+string escaping: `conn.prepareStatement("... WHERE id = ?")` sends the SQL
+template to the database *once*, which parses and compiles a query plan
+for it and returns a handle; each subsequent `setInt(1, id)` +
+`executeQuery()` sends only the parameter *values* over the wire, tagged
+by position, never concatenated into SQL text. The database engine
+therefore literally cannot interpret a parameter value as SQL syntax —
+there's no string reinterpretation step where an attacker's `'; DROP TABLE
+--` payload could be parsed as code, because by the time values are sent,
+parsing of the query structure has already finished.
+
+A `ResultSet` is not a materialized list of rows — it's a cursor into the
+database driver's own buffer, typically streamed from the server in
+batches (`fetchSize`) as you call `.next()`. This is why the standard
+JDBC iteration pattern (`while rs.next() do ...`) exists: each `.next()`
+call may trigger a network round trip to fetch the next batch of rows, so
+wrapping `ResultSet` traversal in Scala's collection operations (`map`,
+`filter`) still has to go through this one-row-at-a-time protocol
+underneath, however functional the surface API looks.
+
+Transactions (`conn.setAutoCommit(false)` ... `conn.commit()`) map
+directly onto the database engine's own transaction machinery — JDBC adds
+no abstraction here, it's a thin pass-through to the same `BEGIN`/`COMMIT`
+/`ROLLBACK` semantics you'd issue in raw SQL, scoped to that one
+`Connection`'s session on the server.
+
 ## Cheat sheet
 
 | Need to... | Use |

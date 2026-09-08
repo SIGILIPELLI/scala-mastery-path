@@ -162,6 +162,35 @@ an invalid one. This "smart constructor" pattern shows up constantly once
 you've met `Either` properly in Module 4 — it's the idiomatic Scala
 alternative to throwing in a constructor.
 
+## How It Actually Works
+
+Linearization is computed once, at compile time, using a deterministic
+algorithm (a variant of C3 linearization): for `class C extends A with B
+with D`, the compiler builds a single ordered list of every ancestor —
+right-most trait first, each trait's own ancestors inserted depth-first
+before it, with duplicates collapsed to their first (right-most)
+occurrence. That ordered list becomes the actual `super` call chain baked
+into the compiled methods: each trait's compiled bytecode contains a call
+not to "the next trait textually" but to the *specific next class in this
+particular linearization for this particular class*, which is why the same
+trait's `super.speak()` can dispatch differently depending on what it's
+mixed into. `abstract override` is what makes this legal: normally you
+can't call `super.foo()` on an abstract method, but `abstract override`
+tells the compiler "trust me, whatever gets linearized before me will have
+provided a concrete implementation by the time this runs" — a promise
+checked when the final concrete class is assembled, not when the trait
+itself is compiled.
+
+Self-types (`this: Repository =>`) compile to nothing extra in bytecode at
+all — no field, no interface, no runtime check. They're a compile-time-only
+constraint: the compiler simply refuses to compile any concrete class
+mixing in this trait unless it also mixes in (or extends) something
+conforming to `Repository`. This is different from `extends Repository`,
+which would make the trait itself a `Repository` and bytecode-visible as
+such; a self-type only requires the *combination* at the final class to
+satisfy it, letting you write mutually-dependent traits (`A` requires `B`,
+`B` requires `A`) that neither could extend directly without a cycle.
+
 ## Cheat sheet
 
 | Concept | What it means |

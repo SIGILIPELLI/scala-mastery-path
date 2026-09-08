@@ -135,6 +135,43 @@ All three `slowSquare` calls start at once, so this takes roughly 100ms
 total rather than 300ms — the whole point of using `Future` in the first
 place.
 
+## How It Actually Works
+
+`Future[A]` is a mutable box plus a callback list, guarded by
+synchronization, sitting on top of the JVM's ordinary thread machinery —
+there's no special "async" bytecode. Creating a `Future(body)` submits
+`body` as a `Runnable`/`Callable`-like unit of work to an
+`ExecutionContext`, which is really just a thin wrapper around a
+`java.util.concurrent.Executor` (commonly `ForkJoinPool` — Scala's default
+global `ExecutionContext` is backed by a work-stealing `ForkJoinPool`
+sized to the number of CPU cores). When the pool has a free worker thread,
+it picks the queued task off the pool's work queue and runs it. `onComplete`
+doesn't poll — it registers a callback on the `Future`'s internal state; if
+the future is already complete, the callback runs (asynchronously, on the
+`ExecutionContext`) immediately, and if not, the completing thread invokes
+every registered callback once it finishes.
+
+`for`-comprehensions over `Future`s desugar to `flatMap` exactly like
+`Option` (see [Module 4](../level-2/04-option-either.md)), which is the
+mechanical reason the "sequential vs. parallel start" trap exists: `for { a
+<- futureA(); b <- futureB() } yield ...` only calls `futureB()` *inside*
+the lambda passed to `futureA().flatMap`, so `futureB()` (and the work it
+kicks off) doesn't start until `futureA` has already completed — the two
+network calls or computations run back-to-back, not concurrently, purely
+because of how `flatMap` chains callbacks. Starting both `Future`s as
+separate `val`s before the `for` avoids this because each `Future(...)`
+call submits its work to the pool immediately, independent of when you
+later read its result.
+
+`Await.result` bridges back from async to sync by literally blocking the
+calling thread using `java.util.concurrent` primitives (a latch/condition
+variable under the hood) until the future's internal state transitions to
+complete or the timeout fires — which is exactly why doing this inside a
+thread the `ExecutionContext`'s own pool needs for other work can starve
+the pool: you've taken one of a fixed number of worker threads and parked
+it doing nothing but waiting, shrinking the pool's real parallelism for
+every other queued task.
+
 ## Cheat sheet
 
 | Need to... | Use |

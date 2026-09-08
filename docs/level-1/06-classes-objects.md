@@ -121,6 +121,35 @@ println(account.currentBalance)   // 150.0
 companion object too). There's no field to accidentally expose — callers
 only ever see the methods you choose to publish.
 
+## How It Actually Works
+
+Scala's `class` compiles to an ordinary JVM class — constructor parameters
+declared with `val`/`var` become private fields with generated getters
+(and setters for `var`), and the "primary constructor" body (any top-level
+statements in the class body) is compiled into the JVM's `<init>` method,
+same as any Java constructor. Auxiliary constructors (`def this(...)`)
+compile to overloaded `<init>` methods that must ultimately delegate to the
+primary constructor — the compiler enforces this by requiring the first
+statement of an auxiliary constructor to be a call to `this(...)`.
+
+`object` (a singleton) has no direct Java equivalent, so the compiler
+builds one out of ordinary pieces: it generates a class named `Foo$` with a
+single `public static final Foo$ MODULE$` field holding the one instance,
+initialized in a static initializer the first time the class is loaded.
+Calling `Foo.bar()` compiles to `Foo$.MODULE$.bar()`. This lazy,
+thread-safe initialization is guaranteed by the JVM's own classloading
+semantics (a class's static initializer runs at most once, under a lock),
+which is why Scala singletons don't need the double-checked-locking
+boilerplate a hand-written Java singleton does.
+
+The `apply` "factory function" trick (`Circle(2.0)` instead of `new
+Circle(2.0)`) is pure syntax sugar with no runtime magic: `Circle(2.0)`
+just compiles to `Circle.apply(2.0)`, a call to a method the companion
+object defines (by convention, one that calls `new Circle(2.0)`
+internally). The compiler treats `f(args)` as `f.apply(args)` whenever `f`
+isn't itself callable — this same rule is what makes `list(3)` work for
+indexing into a `List`.
+
 ## Cheat sheet
 
 | Concept | Syntax | Purpose |

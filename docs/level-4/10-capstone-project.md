@@ -146,6 +146,34 @@ return `401` rather than leaking data or crashing.
 | Level 4 security | PBKDF2 password hashing, HMAC-signed tokens, constant-time comparison |
 | Level 4 Scala 3 features | `enum`/case matching throughout, could be extended with `opaque type UserId` |
 
+## How It Actually Works
+
+This capstone's per-request token check exercises the exact signature
+verification mechanism from [Level 4's security
+module](04-security-best-practices.md): each request's token is
+re-hashed/verified against the server's signing key before any handler
+logic runs, and because that verification is a pure computation over
+bytes (no database lookup required for a stateless JWT-style token), it
+adds essentially no I/O latency compared to the `Db` calls the same
+request will make afterward — which is a large part of why stateless
+token auth scales well versus a server-side session store that requires a
+database round trip on every request just to check who's logged in.
+
+The single shared `Db.conn` (one JDBC connection reused across all
+requests) is a concurrency bottleneck for the same reason described in
+[Level 3's databases module](../level-3/03-databases.md): a JDBC
+`Connection` isn't safe for concurrent use by multiple threads issuing
+statements at the same time, so every request handler that touches `Db`
+is implicitly serialized against every other one, however many worker
+threads the HTTP layer has free — this is exactly the tension the
+capstone's actor-based stretch goal asks you to reason about:
+replacing shared mutable connection state with one actor's private
+mailbox-serialized state (the mechanism from [Level 3's actors
+module](../level-3/09-akka-actors-basics.md)) removes the *need* for
+a database-level lock, because each actor's single-message-at-a-time
+processing already guarantees no two operations on that user's data run
+concurrently.
+
 ## Stretch goals
 
 - Replace the comma-delimited request bodies (`"ada,hunter2"`) with real

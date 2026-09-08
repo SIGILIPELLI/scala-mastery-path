@@ -104,6 +104,43 @@ the throughput or need to survive a node crash — plain Level 3 actors
 inside one `ActorSystem` remain the right default for anything that fits on
 one machine.
 
+## How It Actually Works
+
+Akka Cluster's membership isn't a single source of truth any node
+consults — it's maintained by a **gossip protocol**: each node
+periodically exchanges its local view of cluster state (who's up, who's
+joining, who's been marked unreachable) with a few random peers, and over
+several rounds this information propagates across the whole cluster
+without any node needing to talk to every other node directly. This is
+exactly the mechanical reason "membership changes are eventual, not
+instant": a node that just joined is known immediately only to whichever
+seed node it contacted, and it takes multiple gossip rounds (governed by
+a configurable interval, typically ~1 second) before every node
+converges on the same view — there is no synchronous "join complete"
+signal broadcast to the whole cluster.
+
+Failure detection underneath this uses a **Phi Accrual Failure
+Detector** rather than a simple fixed heartbeat timeout: each node tracks
+the *statistical distribution* of recent heartbeat arrival times from its
+peers and computes a continuously-varying suspicion level ("phi") based
+on how anomalous a delay is relative to that peer's own historical
+pattern, rather than declaring "dead" the instant one heartbeat is late.
+This adapts to network conditions (a peer with historically jittery
+heartbeats gets more benefit of the doubt) but also means the "trap" of
+distribution not being free is structural: cross-node coordination always
+costs at least one network round trip's worth of latency and carries
+irreducible uncertainty about a remote node's true liveness.
+
+Cluster Sharding builds a consistent-hashing-like layer on top of this
+gossip/membership substrate: each entity id is deterministically mapped to
+a "shard," and shards are distributed across nodes by a coordinator
+(itself a singleton actor elected via the cluster's own membership
+mechanism) that rebalances shard ownership as nodes join or leave —
+message delivery to `entityId` gets transparently routed to whichever
+node currently owns that entity's shard, using the same actor mailbox
+mechanics from [Level 3](../level-3/09-akka-actors-basics.md) underneath,
+just with an extra routing hop through the shard region actor.
+
 ## Cheat sheet
 
 | Need to... | Use |

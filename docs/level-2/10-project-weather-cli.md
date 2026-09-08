@@ -331,4 +331,27 @@ it — the exact numbers above will differ by the time you try it yourself.)
   temperature_2m_max,temperature_2m_min` instead of `current=...`, and
   render one line per day using the same `Sky.describe` logic.
 
+## How It Actually Works
+
+The HTTP call to the geocoding/forecast APIs blocks the calling thread
+until a response arrives — a synchronous network call on the JVM parks the
+thread in the OS's socket-read syscall, and nothing else in this
+single-threaded CLI runs until it returns (this is precisely the
+constraint [Level 3's Futures module](../level-3/01-futures-concurrency.md)
+exists to relax, by moving that wait off the main thread). Parsing the
+JSON response into `GeoResult`/`Sky` case classes runs the same
+compile-time-derived decoder machinery from [Module
+7](07-working-with-json.md) — no reflection scans the response at runtime;
+the decoder was generated once when this project compiled, purely from
+each case class's constructor signature.
+
+`Sky.describe`'s branching over weather codes is ordinary pattern matching
+over `Int` ranges, which the compiler can't always turn into a single
+`tableswitch` (unlike matching discrete literal values) when the cases are
+open-ended range guards — it falls back to a sequence of conditional
+bytecode tests evaluated top-to-bottom, same as an `if`/`else if` chain,
+which is a detail worth knowing before assuming every `match` gets
+constant-time dispatch (see [Level 1's pattern-matching
+module](../level-1/08-pattern-matching-intro.md)).
+
 Completing this project means you're ready for **Level 3 · Advanced**.

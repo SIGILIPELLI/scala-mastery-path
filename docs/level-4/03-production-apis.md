@@ -100,6 +100,37 @@ Wrapping the cross-cutting concern (timing, and in a real service, request
 logging/tracing) once around the whole handler is what keeps every route
 observable by construction rather than by discipline.
 
+## How It Actually Works
+
+"Structured validation errors" accumulating multiple problems from one
+request relies on exactly the applicative-not-monadic combination
+mechanism from [Module 1](01-advanced-functional-programming.md)
+(`Validated`/`mapN`): each field validator runs independently and reports
+its own success/failure without short-circuiting the others, then the
+results are combined in one pass — which is why a single malformed
+request can surface every validation problem at once instead of forcing
+the client through a fix-one-error-and-resubmit loop.
+
+API versioning in the URL path (`/v1/tasks` vs. `/v2/tasks`) or a header
+is, mechanically, just another dimension of the same `(method, path)`
+pattern-matching dispatch from [Level 3](../level-3/02-building-apis.md)
+— the version segment is parsed out and matched on exactly like any other
+path component, with no separate "versioning" machinery in the HTTP layer
+itself; it's a routing convention layered on top of ordinary string/path
+matching.
+
+The health check `finally` block matters for a JVM-specific reason: an
+exception propagating up through a request handler, if not caught, can
+leave partially-acquired resources (an opened `Connection` from [Level
+3's database module](../level-3/03-databases.md), a metrics timer never
+stopped) in a leaked state, because the JVM's exception unwinding only
+guarantees `finally` blocks run — it does not automatically release
+resources the way a language with deterministic destructors or a
+`try`-with-resources-everywhere convention might. Using `finally` for
+observability (always recording a request's outcome, success or failure)
+rather than only wrapping the happy path is what guarantees your metrics
+and health signals reflect reality even when handlers throw.
+
 ## Cheat sheet
 
 | Concern | Technique |

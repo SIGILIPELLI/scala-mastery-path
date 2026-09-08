@@ -116,6 +116,37 @@ val parity = n match
 println(parity)   // odd
 ```
 
+## How It Actually Works
+
+A `match` expression doesn't compile to one uniform mechanism — the
+compiler picks the cheapest applicable strategy per pattern shape.
+Matching on simple literal `Int`s or `String`s (dense integer cases
+especially) compiles to the JVM's `tableswitch` or `lookupswitch`
+bytecode instruction — the same O(1) jump-table dispatch a Java `switch`
+compiles to, rather than a chain of `if`/`else if` comparisons. Matching
+on *type* (`case s: String => ...`) compiles to a sequence of
+`instanceof` checks (JVM `instanceof` bytecode) followed by a cast,
+evaluated top to bottom — which is exactly why pattern order matters and
+why an unreachable/overly-general earlier case can shadow a later one.
+
+Destructuring a case class (`case Point(x, y) => ...`) doesn't get special
+runtime support either — it compiles to a call to the case class's
+compiler-generated `unapply` method (see [Module 7](07-case-classes.md)),
+which returns `Some((x, y))` on a structural match; the compiler then
+extracts the tuple's fields into the bound names `x` and `y`. For a
+non-case class, you get the same pattern-matching syntax only if you
+hand-write a matching `unapply` in its companion object — the language
+feature is really "call `unapply` and destructure what it returns," not
+anything intrinsically about case classes.
+
+Every `match` also gets a `scala.MatchError` thrown if no case applies and
+there's no wildcard `_` — the compiler inserts this fallback automatically,
+which is why exhaustiveness checking on `sealed` hierarchies (covered in
+[Module 9](09-traits-basics.md) and [Level 2's advanced pattern
+matching](../level-2/02-pattern-matching-advanced.md)) matters: it lets the
+compiler prove at compile time that this runtime fallback can never
+actually trigger.
+
 ## Cheat sheet
 
 | Pattern | Matches |

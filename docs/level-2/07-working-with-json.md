@@ -134,6 +134,43 @@ ceremony — it turns "a malformed response crashes the program" into "a
 malformed response is a value the caller has to explicitly handle," exactly
 the philosophy Module 4 built up.
 
+## How It Actually Works
+
+"Deriving JSON for a case class" without writing any encoder by hand relies
+on the same compile-time mechanism as [implicit resolution](06-implicits-basics.md):
+libraries like upickle generate a `ReadWriter[YourCaseClass]` at *compile
+time* using macros (or, in some libraries, Scala 3's inline/derivation
+features) that inspect the case class's constructor parameter list —
+available because a case class's field names and types are part of its
+public, compiler-visible signature — and mechanically produce code that
+walks each field, converting it via that field's own derived
+`ReadWriter`, recursively. Nothing is discovered via reflection at
+runtime; the encoding/decoding logic for `Employee(name: String, salary:
+Double)` is generated once, as ordinary methods, when the project
+compiles — which is also why forgetting to import the right implicit
+gives a compile error ("no ReadWriter found") rather than a runtime
+surprise.
+
+The `Option` serialization "trap" comes directly from this mechanism:
+there's no single universal JSON representation of "a missing field" vs.
+"a field present with value null" vs. "`None`," so each library's derived
+`ReadWriter[Option[A]]` makes its own choice (upickle typically omits the
+key entirely for `None`, or represents it depending on version/config) —
+the behavior is a property of the specific derived instance you're using,
+not something intrinsic to `Option` itself.
+
+Parsing JSON you don't have a case class for works because underneath the
+case-class layer, every JSON library has an untyped AST type (e.g.
+upickle's `ujson.Value`, a sealed hierarchy of `Str`, `Num`, `Obj`, `Arr`,
+`Bool`, `Null`) — the exact same sealed-trait-plus-case-classes pattern
+from [Level 1](../level-1/07-case-classes.md) and [Module
+8](../level-1/08-pattern-matching-intro.md), just modeling "any JSON value"
+instead of your domain type. `read[YourCaseClass](json)` is really "parse
+to this AST, then run the derived decoder against the AST" — two separate
+compiler-generated/generic stages, which is why parsing to `ujson.Value`
+and then manually navigating it (`.obj("field").str`) is always available
+as a fallback when no case class fits the shape.
+
 ## Cheat sheet
 
 | Task | Code |

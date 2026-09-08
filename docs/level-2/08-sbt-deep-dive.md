@@ -165,6 +165,40 @@ reliable habits avoid the confusion entirely:
   (`sbt` then `project cli` then plain `run`), and switch back
   (`project root`) when you're done.
 
+## How It Actually Works
+
+`build.sbt` isn't a config file in the INI/YAML sense — it's Scala source
+code, evaluated by sbt's own embedded interpreter, that builds up a
+dependency graph of **settings** and **tasks**. `name := "hello-scala"` is
+itself a method call: `:=` is defined on `SettingKey`, and it returns a
+`Setting[T]` value describing "when this key is asked for, produce this
+value" — sbt collects every such `Setting` across your `build.sbt` (and any
+plugins) into one big graph before running anything. This is why sbt
+startup and reload feels like a compile step: it genuinely is one — your
+build definition is compiled once and cached, which is also why the first
+`sbt` invocation after touching `build.sbt` is slow (recompiling the build
+definition itself) while subsequent commands in the same session are fast.
+
+Tasks (`compile`, `run`, `test`, and custom ones you define with `.value`)
+are the dynamic counterpart to settings: where a setting is computed once
+per session and cached, a task re-runs its body every time it's invoked,
+and its dependencies are wired up through the `.value` macro — writing
+`(Compile / sources).value` inside a task body doesn't call a method at
+runtime, the macro rewrites your task definition at compile time into an
+explicit dependency edge in sbt's task graph, so sbt knows to run
+`sources` first and thread its result in. This static graph-building is
+also why you can't write `if (cond) x.value else y.value` naively — both
+branches' dependencies get wired in regardless of which branch runs,
+because the graph is fixed before any task executes.
+
+Multi-module scoping (`root/compile`, `sub-module/test`) reflects the same
+graph: each subproject gets its own axis in the settings/task key space
+(project, configuration, task), and `run`/`test` without a scope resolve
+against whichever project's `build.sbt` context you're currently in at the
+sbt shell — the classic "trap" of running `test` at the aggregate root and
+expecting it to mean one specific submodule comes directly from this
+three-axis key resolution defaulting differently than you'd guess.
+
 ## Cheat sheet
 
 | Concept | Syntax | Purpose |

@@ -142,6 +142,41 @@ println(App().log("started"))   // [12:34:56.789] [LOG] started
 This "stackable trait" pattern is used throughout Scala library code; for
 Level 1 it's enough to recognize the shape when you see it.
 
+## How It Actually Works
+
+The JVM has no native concept of "a class inheriting behavior from multiple
+sources," only single class inheritance plus interfaces — yet Scala traits
+let you mix in several traits with concrete method bodies. The trick is
+Java's own **interface default methods** (added in Java 8): a trait with
+only abstract members compiles to a plain interface, but a trait with
+concrete method bodies compiles to an interface carrying `default` methods
+(the method body lives directly on the interface, compiled to bytecode
+just like a class method). When a class mixes in multiple traits, the JVM
+resolves which default method wins the same way Java itself resolves
+default-method diamonds: the *most specific* type in the linearization
+wins, and if two unrelated traits both define the same method with no
+override, the compiler forces you to resolve the ambiguity explicitly —
+it won't silently pick one.
+
+"Stacking traits with `override`" and calling `super.method()` from inside
+a trait relies on **linearization** — the compiler computes a single,
+deterministic ordering of all mixed-in traits (right to left in the `with`
+clause, then depth-first) that decides what `super` refers to at each
+point in the chain. This isn't dynamic dispatch guesswork; it's resolved at
+compile time into a fixed method-call chain, which is how `super.speak()`
+inside `trait Loud extends Animal` can mean "whichever trait comes next in
+this particular class's specific linearization" rather than always meaning
+the same fixed class.
+
+`sealed trait` adds a compile-time-only restriction: subtypes must be
+defined in the same file (or, in Scala 3, the same compilation unit). This
+produces no different bytecode for the trait itself, but it lets the
+compiler perform **exhaustiveness checking** on `match` expressions over
+that trait — since it can enumerate every possible subtype at compile
+time, it can prove a `match` handles all of them and warn (or error, with
+`-Xfatal-warnings`) if one is missing, rather than deferring the failure to
+a runtime `MatchError`.
+
 ## Cheat sheet
 
 | Syntax | Meaning |

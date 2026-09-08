@@ -130,6 +130,45 @@ extension (p: Point)
 println(Point(1, 2) + Point(3, 4))   // Point(4,6)
 ```
 
+## How It Actually Works
+
+Scala 3 `enum` compiles down to exactly the sealed-trait-plus-case-classes
+pattern from [Level 1](../level-1/07-case-classes.md) and [Level
+3](../level-3/09-akka-actors-basics.md) — `enum Color { case Red, Green,
+Blue }` is desugared by the compiler into a `sealed abstract class Color`
+plus one `case object` per simple case (or `case class` per
+parameterized case), with a synthesized companion holding a `values`
+array and a `valueOf`/`fromOrdinal` lookup. There's no new JVM-level enum
+mechanism involved (Scala enums are unrelated to `java.lang.Enum` unless
+you explicitly extend `java.lang.Enum` for Java interop) — `enum` is
+purely a more concise *surface syntax* over machinery that already
+existed.
+
+**Opaque types** achieve genuinely zero runtime cost by being a
+compile-time-only fiction: `opaque type UserId = Int` tells the type
+checker to treat `UserId` as a distinct, incompatible type from `Int`
+everywhere outside the defining scope (catching accidental mixups at
+compile time), but after compilation, every `UserId` *is* just an `Int` in
+the bytecode — no wrapper object, no boxing, no allocation. This is the
+mechanical reason opaque types beat a `case class UserId(value: Int)`
+wrapper for this purpose: a case class wrapper is a real object at
+runtime, allocated on the heap (or occasionally stack-allocated/escape-
+analyzed away by the JIT, but not guaranteed), while an opaque type is
+erased to the underlying representation with certainty, by construction,
+at compile time.
+
+**Union types** (`Int | String`) are also a compile-time-only construct
+resolved through erasure: the compiler tracks that a value could be
+either type and requires you to narrow it (typically via pattern
+matching or `isInstanceOf`) before using type-specific operations, but at
+the bytecode level a union type erases to their common
+runtime supertype (often `Object`/`Any`) plus compiler-inserted
+`instanceof` checks and casts wherever you narrow it — there's no runtime
+"union" object; the JVM only ever holds one concrete value at a time, and
+the union is the compiler's bookkeeping about which concrete types are
+possible at that point in the code, not a real tagged wrapper the way
+`Either`'s `Left`/`Right` are actual heap objects.
+
 ## Cheat sheet
 
 | Feature | Use it for |

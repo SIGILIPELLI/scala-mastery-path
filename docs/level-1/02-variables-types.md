@@ -128,6 +128,38 @@ them in error messages or library signatures will save you confusion later.
 | `String` | `"hello"` | double quotes |
 | `Unit` | — | "no meaningful value," like `void` |
 
+## How It Actually Works
+
+`val` and `var` are a source-level distinction only — the JVM bytecode
+doesn't have an "immutable local variable" concept for method-local values;
+a `val` inside a method just becomes a bytecode local slot that the compiler
+guarantees (via type checking, not runtime enforcement) is only ever
+stored to once. The safety is compile-time, not a runtime lock. Where it
+*does* show up in bytecode is fields: a `val` member of a class compiles to
+a `private final` field plus a public getter method, while a `var` member
+compiles to a plain `private` field with both a getter and a setter — the
+`final` modifier is the JVM-level guarantee the compiler is relying on.
+
+`Int`, `Double`, `Boolean`, etc. look like objects (you can call `.abs` or
+`.toDouble` on a literal), but the compiler erases that appearance whenever
+it can: in most contexts an `Int` is compiled straight down to the JVM's
+primitive `int`, and `i.toDouble` becomes a single `i2d` bytecode
+instruction, not a method call on a heap object. Scala only "boxes" a
+primitive into an actual object (`java.lang.Integer`, etc.) when it has to
+— e.g. storing it in a generic collection like `List[Int]` before Scala's
+specialization kicks in, or when code demands `Any`. This is why `Any` sits
+at the top of the type hierarchy above both objects and value types like
+`Int`: on the JVM, `Any` unifies things that are fundamentally different at
+the bytecode level (object references vs. raw primitives), and the compiler
+inserts the boxing/unboxing conversions for you wherever the two need to
+mix.
+
+String interpolation (`s"..."`) is a compile-time macro-like rewrite, not
+string concatenation with extra syntax: `s"${a} + ${b} = ${a + b}"` is
+rewritten by the compiler into a call to `StringContext(...).s(a, b, a + b)`,
+which under the hood builds the result with a `StringBuilder` — the same
+mechanism you'd get from manual `+` concatenation, just generated for you.
+
 ## Exercise
 
 Declare a `val` for your name, a `val` for your birth year, and a `var` for a

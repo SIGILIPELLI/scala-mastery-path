@@ -130,6 +130,40 @@ this once a hand-rolled comparison suggests something worth measuring
 rigorously, especially before changing performance-sensitive production
 code based on a microbenchmark.
 
+## How It Actually Works
+
+`System.nanoTime` around a single run is unreliable for a mechanical
+reason specific to the JVM: bytecode starts out **interpreted**, and the
+JVM's JIT (Just-In-Time) compiler only kicks in and compiles a method to
+optimized native machine code after it's been called enough times to
+cross a "hot method" threshold (by default a few thousand invocations for
+C2, the JVM's top-tier optimizing compiler). A timing loop's first
+iterations run interpreted, dramatically slower than the steady-state
+speed the same code reaches once JIT-compiled — plus the JIT can
+speculatively deoptimize and recompile methods as it learns more about
+actual runtime types, adding more variance. This is exactly why proper
+benchmarking (JMH) runs explicit "warmup" iterations before measuring:
+it's giving the JIT time to reach steady state so the measurement
+reflects real production performance, not interpreter overhead.
+
+The classic `List` append trap (`list :+ x` in a loop) is a direct
+consequence of `List`'s singly-linked-list structure (see [Level 1's
+collections module](../level-1/05-collections-basics.md)): appending to
+the end requires copying every existing cons cell to build a new list
+whose last cell points at the new element, making each `:+` an O(n)
+operation and the whole loop O(n²). Reaching for `ListBuffer` (a mutable
+buffer with O(1) amortized append, converted to an immutable `List` once
+at the end) or building the list in reverse with `::` and reversing once
+sidesteps this because both avoid ever re-copying the growing structure
+on each step.
+
+JMH avoids hand-rolled timing's other trap — the JIT optimizing away work
+whose result is never used (dead code elimination) — by having the
+benchmark method return its result and by using **blackholes**, an actual
+runtime mechanism (a JMH-provided object your benchmark passes computed
+values into) that the JIT cannot see through, forcing it to treat the
+computation as having an observable side effect it can't eliminate.
+
 ## Cheat sheet
 
 | Need to... | Use |

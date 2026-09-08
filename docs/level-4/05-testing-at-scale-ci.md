@@ -107,6 +107,41 @@ spending time on the slow one — `run:` steps in GitHub Actions already
 fail the job (and stop subsequent steps in most default configurations) the
 moment `sbt` exits non-zero.
 
+## How It Actually Works
+
+Test tags in ScalaTest compile down to plain string constants attached as
+annotations/metadata on each registered test entry (the same
+"registered-at-construction-time" list described in [Level 2's testing
+module](../level-2/05-scalatest-testing.md)) — `sbt "testOnly * --
+-l SlowTest"` filters that list by tag string before running anything,
+which is why an untagged slow test can't be excluded: there's no metadata
+for the filter to match against, so it always lands in the "everything
+else" bucket the fast suite runs.
+
+Parallel test execution in sbt works by running multiple test classes'
+JVM-level test methods concurrently across a thread pool sized to
+available cores — but critically, parallelism in sbt's default test
+runner is typically at the *suite* level (different test classes run
+concurrently with each other), not necessarily within a single suite's
+individual tests. The mutable-shared-state trap arises because two test
+suites running truly concurrently can both read/write the same
+`object`-held mutable field or the same on-disk file/database row at the
+same time — since (as established in [Level 2](../level-2/05-scalatest-testing.md))
+a suite's tests execute against shared instance state by default, and
+`object`s are process-wide singletons (see [Level 1's classes and
+objects module](../level-1/06-classes-objects.md)), any `var` on an
+`object` used by tests is exactly the kind of shared mutable state two
+threads can race on with no synchronization, producing intermittent,
+hard-to-reproduce failures that only show up under parallel execution.
+
+"What CI actually enforces" is, mechanically, just running the exact same
+`sbt compile`/`sbt test` commands you'd run locally, on a fresh,
+disposable environment/container with none of your local machine's
+incidental state (stale `target/` artifacts, environment variables,
+locally-cached test data) — its value comes entirely from reproducibility
+of the build/test pipeline, not from any testing capability sbt itself
+doesn't already have.
+
 ## Cheat sheet
 
 | Need to... | Use |

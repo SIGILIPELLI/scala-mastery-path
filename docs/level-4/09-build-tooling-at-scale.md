@@ -117,6 +117,42 @@ once you actually observe a reason — a genuinely reusable core library, a
 team boundary, or compile times that start to hurt in a single flat
 project — not by default.
 
+## How It Actually Works
+
+`dependsOn` and `aggregate` control two entirely separate mechanisms in
+sbt's settings/task graph (see [Module 8](../level-2/08-sbt-deep-dive.md)
+for the graph model itself): `dependsOn` wires one subproject's
+*classpath* to another's compiled output — `apiModule.dependsOn(coreModule)`
+means code in `apiModule` can actually import and call classes compiled
+in `coreModule`, and it forces `coreModule` to compile first as a real
+compile-time dependency. `aggregate`, by contrast, only affects *command
+propagation*: `root.aggregate(coreModule, apiModule)` means running
+`compile` or `test` at the root re-runs that same command across both
+listed subprojects, with zero implication about whether either can
+actually reference the other's code. This is exactly why the trap exists:
+a project can be aggregated (commands cascade to it) without being a
+`dependsOn` classpath dependency at all, and mixing the two up produces
+either surprising compile errors ("why can't this module see that
+class?" — missing `dependsOn`) or surprising build behavior ("why did
+`sbt test` run tests in a module I don't even use?" — an unwanted
+`aggregate`).
+
+Splitting into modules changes what the *incremental compiler* (Zinc,
+from [Module 8](../level-2/08-sbt-deep-dive.md)) has to recompile on a
+given change: Zinc's dependency tracking operates at the level of
+`compile`-scoped classpaths, so editing a file in `apiModule` only
+requires recompiling `apiModule` and whatever (if anything) `dependsOn`
+depends on `apiModule` — `coreModule`, having no dependency back on
+`apiModule`, never gets touched. In one monolithic module, every file
+lives in the same compilation unit's dependency graph, so a broadly-used
+trait or a widely-imported file can force a much larger recompile on
+each build, however granular the specific edit actually was. This
+compile-boundary effect is also exactly the "over-modularizing small
+projects" trap: every module boundary adds its own settings/target
+directories and Zinc analysis overhead, which only pays off once a
+project is large enough that isolating recompilation to a genuinely
+smaller subgraph is worth that fixed cost.
+
 ## Cheat sheet
 
 | Need to... | Use |

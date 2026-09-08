@@ -100,6 +100,46 @@ just a monoid" is what lets you write one generic function (`combineAll`,
 libraries like Cats that formalize dozens of these patterns (covered in
 Level 4).
 
+## How It Actually Works
+
+A `Monoid[A]` type class (covered mechanically in [Module
+6](06-type-classes.md)) compiles to exactly what a type class always
+compiles to: a trait with two abstract members (`combine`, `empty`)
+and, per type you support, an implicit instance the compiler wires in as
+a method parameter at each call site — `sumAll(list)(using
+Monoid[Int])` becomes, after erasure, an ordinary method call passing the
+`Int` monoid instance as a plain extra argument, with no runtime dispatch
+based on `A`'s identity beyond that. The "identity element" law
+(`combine(x, empty) == x`) isn't checked by the compiler at all — nothing
+in the type system encodes algebraic laws, only shapes (method
+signatures); this is why the trap of an `empty` that violates the law
+compiles cleanly and only breaks logically, not at compile time. Property-
+based testing ([Module 5](05-testing-advanced.md)'s ScalaCheck) is the
+usual way projects actually verify laws like this, since the compiler
+structurally cannot.
+
+`Functor[F[_]]`'s `map` operation is a higher-kinded type class (a full
+treatment is in [Module 7](07-higher-kinded-types.md)): `F[_]` is a
+placeholder not for a concrete type but for a *type constructor* — `List`,
+`Option`, `Future`, anything with one type parameter — so the instance for
+`List` provides `map` by literally delegating to `List`'s own built-in
+`map` method. The "not every `F[_]` is a functor" trap has a concrete
+mechanical cause: something like `Either[String, _]` fixed on the left
+needs `map` to only touch the right side, or a type like `Function1[R, _]`
+needs `map` to mean "compose after" — the *shape* type-checks against
+`Functor[F[_]]`'s signature, but whether a *sensible*, law-abiding `map`
+implementation exists for that shape is a design question the compiler
+has no way to evaluate.
+
+The standard library "already looking like this" (Option/List/Future all
+having `map`/`flatMap`/`filter` with consistent semantics) isn't
+coincidence or convergent evolution — the collections library and
+`Option`/`Try`/`Future` were deliberately designed against these same
+functor/monad shapes so that generic code written against `Functor[F[_]]`
+or `Monad[F[_]]` type classes (or against `for`-comprehension desugaring
+directly) works uniformly across all of them without special-casing each
+container type.
+
 ## Cheat sheet
 
 | Pattern | Shape | Standard-library examples |

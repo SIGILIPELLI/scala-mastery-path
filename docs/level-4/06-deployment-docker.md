@@ -133,6 +133,43 @@ project/project/
 | Build without requiring local `sbt` | a multi-stage Dockerfile with a build stage and a run stage |
 | Avoid leaking host build artifacts into the image | a `.dockerignore` excluding `target/`, `.git/` |
 
+## How It Actually Works
+
+A "fat JAR" merges every dependency's compiled `.class` files (and
+resources) into one archive alongside your own compiled code, because the
+JVM's classloader needs everything it might load reachable on one
+classpath at startup — without bundling, you'd have to separately ship
+every transitive dependency jar and assemble the classpath by hand at
+`java -jar` time. Merge conflicts happen because a JAR is really just a
+ZIP archive with a specific directory layout, and two dependencies can
+legitimately ship a file at the identical path inside that archive (a
+common `META-INF/services/...` provider-registration file, or an
+identically-named resource) — the assembly plugin has to pick a merge
+strategy (concatenate, keep first, keep last) per conflicting path because
+a plain ZIP can only hold one entry at each path.
+
+Reading configuration from environment variables rather than baking it
+into the JAR works through the JVM's `System.getenv`, which reads the
+process's environment block set by whatever launched the JVM — in a
+container, that's the `-e` flags or `environment:` block Docker passes
+into the container's own isolated process namespace, which is precisely
+why the same image can run with different config in different
+environments without rebuilding it.
+
+Multi-stage Docker builds exist because a Docker image is built as a
+sequence of **layers**, each one a filesystem diff — installing an sbt
+plus JDK build toolchain to compile your project adds gigabytes of layers
+that have nothing to do with running the finished JAR. A multi-stage
+build runs the compile step in one throwaway build stage (its layers
+never make it into the final image) and `COPY --from=` pulls only the
+resulting JAR into a fresh, minimal final stage — so the shipped image
+contains just a JRE and your JAR, not the entire build chain.
+`.dockerignore` matters for the same layer-caching mechanism: any file it
+doesn't exclude gets included in the build context sent to the Docker
+daemon and can invalidate cached layers (or bloat context transfer) even
+when it has no bearing on the actual build output — a stray `target/` or
+`.git/` directory being copied in is a common, avoidable cache-buster.
+
 ## Stretch goals
 
 - Add a `HEALTHCHECK` instruction to the Dockerfile that curls the

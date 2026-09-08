@@ -136,6 +136,40 @@ known recipient wherever the caller doesn't need to block for a single
 answer; reserve `ask` for edges of the actor system, like an HTTP handler
 that genuinely needs a value before it can respond to its own caller.
 
+## How It Actually Works
+
+Every actor owns a **mailbox** — by default an unbounded (or configurably
+bounded) queue that other threads/actors push messages onto — and the
+guarantee that "actors don't run synchronously" comes from how the
+`ActorSystem`'s **dispatcher** schedules work against that mailbox. A
+dispatcher is, under the hood, backed by a thread pool (often a
+`ForkJoinPool`, the same executor family behind `Future`'s
+`ExecutionContext` in [Module 1](01-futures-concurrency.md)) that doesn't
+dedicate one thread per actor — instead, when a message lands in an idle
+actor's mailbox, the dispatcher schedules a small unit of work ("process
+up to N queued messages from this mailbox") onto whichever pool thread is
+free. This is the actual mechanism behind Akka's core safety guarantee:
+an actor processes its mailbox **one message at a time, never
+concurrently with itself**, because the dispatcher only ever has at most
+one such scheduled unit of work active per actor at once — so an actor's
+mutable internal state (the pattern in "actors with internal state") never
+needs locks or synchronization; the single-message-at-a-time scheduling
+*is* the concurrency control.
+
+`tell` (`!`) is fire-and-forget because it does nothing more than enqueue
+the message object onto the target's mailbox and return immediately — no
+thread blocks waiting for processing. The `ask` pattern (`?`) is built
+entirely on top of `tell` plus `Future`: internally, `ask` creates a
+short-lived, hidden temporary actor whose only job is to receive exactly
+one reply and complete a `Promise` (the mutable, settable counterpart to a
+`Future`) with it, sends your message to the target with that temporary
+actor's address as the sender, and returns the `Future` half of that
+promise to you immediately. This is precisely why "`ask` everywhere
+defeats the point": each `ask` call allocates a temporary actor and a
+`Future`, and forces the caller back into blocking-or-callback territory
+around each request/response pair — the overhead and back-pressure loss
+`tell`-based message-passing was designed to avoid in the first place.
+
 ## Cheat sheet
 
 | Need to... | Use |
