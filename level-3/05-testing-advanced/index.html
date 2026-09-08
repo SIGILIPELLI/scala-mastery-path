@@ -1649,6 +1649,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2296,6 +2307,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2439,6 +2461,36 @@ inputs for a class that itself depends on a mock:</p>
 <a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">  </span><span class="p">}</span>
 <a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="p">}</span>
 </code></pre></div>
+<h2 id="how-it-actually-works">How It Actually Works<a class="headerlink" href="#how-it-actually-works" title="Permanent link">&para;</a></h2>
+<p>ScalaCheck's property-based testing works by pairing a <code>Gen[A]</code> (a
+generator) with your property function: <code>Gen[A]</code> is, mechanically, a
+thin wrapper around a <code>Random</code>-seeded function that produces values of
+type <code>A</code>, often composed from smaller generators via <code>map</code>/<code>flatMap</code> (the
+same monadic shape as <code>Option</code>/<code>Future</code> — see <a href="../04-functional-patterns/">Module
+4</a>). When you run <code>forAll(genA) { a =&gt; property
+}</code>, ScalaCheck doesn't just generate arbitrary values once — it runs
+dozens of them (default 100 per property), and specifically also probes
+"edge" values it knows are often bug-prone (0, negative numbers, empty
+collections) before falling back to pure randomness, weighted by a "size"
+parameter that grows across the run to also exercise larger inputs. When a
+run finds a failing case, ScalaCheck <strong>shrinks</strong> it: it repeatedly tries
+smaller/simpler values that still fail the property (fewer list elements,
+smaller numbers) until it can't shrink further, which is why failures
+report a minimal reproducing example instead of some large random
+input.</p>
+<p>Mockito mocks work through <strong>runtime bytecode generation</strong>: <code>mock[Repo]</code>
+doesn't secretly create a real <code>Repo</code> — it uses a bytecode-generation
+library (historically CGLIB/ByteBuddy) to synthesize, at test-run time, a
+brand-new subclass (for a class) or dynamic proxy (for a trait/interface)
+of <code>Repo</code> whose every method is overridden to record the call it received
+and return a pre-programmed value (or a default like <code>null</code>/<code>0</code> if
+unstubbed) instead of running any real logic. <code>when(mock.find(1))
+.thenReturn(...)</code> works by first invoking the real method call (recorded
+by the mock's interceptor rather than executed), then attaching the
+return value to that recorded call signature for future invocations —
+which is why stubbing only works on methods the mocking library can
+actually override (final methods and most <code>object</code>s resist mocking, since
+there's no subclass point to intercept them through).</p>
 <h2 id="cheat-sheet">Cheat sheet<a class="headerlink" href="#cheat-sheet" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

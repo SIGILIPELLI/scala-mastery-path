@@ -1716,6 +1716,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2318,6 +2329,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2447,6 +2469,39 @@ Reach for <code>F[_]</code> abstraction when you actually have <em>multiple</em>
 containers that need the same logic (as here, <code>List</code>/<code>Option</code>/<code>Box</code>) — this
 is the same "don't abstract until you have two real cases" judgment call
 you already make with ordinary generics.</p>
+<h2 id="how-it-actually-works">How It Actually Works<a class="headerlink" href="#how-it-actually-works" title="Permanent link">&para;</a></h2>
+<p>"Kinds" describe types the same way types describe values — a concrete
+type like <code>Int</code> or <code>String</code> has kind <code>*</code> ("a fully-applied, instantiable
+type"), while <code>List</code> on its own (without a type argument) has kind <code>* -&gt;
+*</code>: it's a function <em>from</em> a type <em>to</em> a type, taking one type parameter
+(<code>List[Int]</code> is <code>*</code>, but bare <code>List</code> is not directly instantiable). This
+is purely a compile-time classification the type checker maintains — it
+never appears in bytecode — but it's the exact reason <code>Functor[F[_]]</code>
+must be written with that underscore: it's declaring "<code>F</code> itself must have
+kind <code>* -&gt; *</code>," and passing something of the wrong kind (like a fully
+concrete <code>Int</code>, kind <code>*</code>) is a kind mismatch, rejected before the program
+ever reaches type-checking of values — which is also why kind-mismatch
+errors read so cryptically: the compiler is reporting a mismatch one
+level of abstraction higher than the "wrong type" errors you're used to.</p>
+<p>At runtime, higher-kinded polymorphism vanishes almost entirely due to
+JVM <strong>type erasure</strong>: after compilation, <code>List[Int]</code> and <code>List[String]</code>
+are both just <code>List</code> (a raw class) — the JVM has no concept of generic
+type parameters at the bytecode level, only at the source/compile level
+via type-checking and inserted casts. A method generic over <code>F[_]</code>
+compiles to bytecode that manipulates <code>F</code>'s <em>erased</em> runtime
+representation (whatever concrete class you instantiated it with)
+uniformly, relying entirely on compile-time type checking to have already
+guaranteed the operations are valid — there's no runtime higher-kinded
+dispatch mechanism because the JVM doesn't preserve the information needed
+for one.</p>
+<p>"When higher-kinded abstraction stops paying for itself" is a real,
+measurable trade in exactly this light: every layer of <code>F[_]</code>
+abstraction is compile-time-only bookkeeping that adds indirection for a
+human reader (and sometimes an extra allocation, e.g. wrapping a value
+just to satisfy <code>Functor[F[_]]</code>'s shape) without changing what happens at
+the bytecode level once erasure and implicit resolution are done — the
+cost is legibility and compile time, not runtime performance, which is
+exactly the trade the module's rule of thumb is weighing.</p>
 <h2 id="cheat-sheet">Cheat sheet<a class="headerlink" href="#cheat-sheet" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

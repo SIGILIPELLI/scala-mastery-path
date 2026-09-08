@@ -1256,6 +1256,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2318,6 +2329,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2490,6 +2512,34 @@ up with a <code>List[Option[A]]</code>. <code>.flatten</code> drops every <code>
 <a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="n">println</span><span class="p">(</span><span class="n">opts</span><span class="p">.</span><span class="n">flatten</span><span class="p">)</span><span class="w">       </span><span class="c1">// List(1, 3)</span>
 <a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="n">println</span><span class="p">(</span><span class="n">opts</span><span class="p">.</span><span class="n">flatten</span><span class="p">.</span><span class="n">sum</span><span class="p">)</span><span class="w">   </span><span class="c1">// 4</span>
 </code></pre></div>
+<h2 id="how-it-actually-works">How It Actually Works<a class="headerlink" href="#how-it-actually-works" title="Permanent link">&para;</a></h2>
+<p><code>Option[A]</code> is itself a <code>sealed trait</code> with exactly two subtypes: <code>Some(a)</code>
+(a case class wrapping one value) and <code>None</code> (a <code>case object</code> — see
+<a href="../../level-1/07-case-classes/">Level 1's case classes module</a>). There's no
+runtime magic distinguishing "a value" from "absence" beyond ordinary
+subtype polymorphism and pattern matching — <code>option.map(f)</code> is defined as a
+plain <code>match</code>: <code>case Some(a) =&gt; Some(f(a))</code>, <code>case None =&gt; None</code>. Because
+<code>Option</code> is sealed, the compiler can exhaustiveness-check any <code>match</code> over
+it, which is part of why idiomatic Scala reaches for <code>Option</code> instead of
+<code>null</code>: the compiler can prove every case is handled, whereas nothing stops
+a <code>String</code> typed value from silently being <code>null</code> at runtime and blowing up
+later with a <code>NullPointerException</code> the compiler had no way to flag.</p>
+<p><code>for</code>-comprehensions over <code>Option</code>/<code>Either</code> (covered fully in <a href="../09-for-comprehensions/">Module
+9</a>) desugar to chained <code>flatMap</code>/<code>map</code> calls, so
+<code>for { a &lt;- opt1; b &lt;- opt2 } yield a + b</code> becomes <code>opt1.flatMap(a =&gt;
+opt2.map(b =&gt; a + b))</code>. This is exactly why the whole chain short-circuits
+on the first <code>None</code>/<code>Left</code>: <code>flatMap</code> on <code>None</code> is defined to just return
+<code>None</code> without ever calling the function you passed it, so evaluation
+never reaches the later steps — it's ordinary method dispatch, not special
+control-flow.</p>
+<p><code>Try</code> wraps this same <code>map</code>/<code>flatMap</code> interface around a computation that
+might throw, and its mechanism is a <code>try</code>/<code>catch</code> block around your
+by-name argument at construction time: <code>Try(risky())</code> evaluates <code>risky()</code>
+immediately inside a <code>try</code>, wrapping a thrown exception in <code>Failure(e)</code> and
+a normal result in <code>Success(v)</code>. Because <code>Failure</code> and <code>Success</code> share
+<code>Try</code>'s <code>map</code>/<code>flatMap</code> interface with <code>Option</code>'s <code>Some</code>/<code>None</code>, the same
+short-circuiting chain logic applies — a <code>Failure</code> anywhere in a chain
+propagates untouched to the end, same as <code>None</code>.</p>
 <h2 id="cheat-sheet">Cheat sheet<a class="headerlink" href="#cheat-sheet" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

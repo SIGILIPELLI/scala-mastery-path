@@ -1997,6 +1997,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2240,6 +2251,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2374,6 +2396,37 @@ failing "Run fast tests" step should block the workflow before ever
 spending time on the slow one — <code>run:</code> steps in GitHub Actions already
 fail the job (and stop subsequent steps in most default configurations) the
 moment <code>sbt</code> exits non-zero.</p>
+<h2 id="how-it-actually-works">How It Actually Works<a class="headerlink" href="#how-it-actually-works" title="Permanent link">&para;</a></h2>
+<p>Test tags in ScalaTest compile down to plain string constants attached as
+annotations/metadata on each registered test entry (the same
+"registered-at-construction-time" list described in <a href="../../level-2/05-scalatest-testing/">Level 2's testing
+module</a>) — <code>sbt "testOnly * --
+-l SlowTest"</code> filters that list by tag string before running anything,
+which is why an untagged slow test can't be excluded: there's no metadata
+for the filter to match against, so it always lands in the "everything
+else" bucket the fast suite runs.</p>
+<p>Parallel test execution in sbt works by running multiple test classes'
+JVM-level test methods concurrently across a thread pool sized to
+available cores — but critically, parallelism in sbt's default test
+runner is typically at the <em>suite</em> level (different test classes run
+concurrently with each other), not necessarily within a single suite's
+individual tests. The mutable-shared-state trap arises because two test
+suites running truly concurrently can both read/write the same
+<code>object</code>-held mutable field or the same on-disk file/database row at the
+same time — since (as established in <a href="../../level-2/05-scalatest-testing/">Level 2</a>)
+a suite's tests execute against shared instance state by default, and
+<code>object</code>s are process-wide singletons (see <a href="../../level-1/06-classes-objects/">Level 1's classes and
+objects module</a>), any <code>var</code> on an
+<code>object</code> used by tests is exactly the kind of shared mutable state two
+threads can race on with no synchronization, producing intermittent,
+hard-to-reproduce failures that only show up under parallel execution.</p>
+<p>"What CI actually enforces" is, mechanically, just running the exact same
+<code>sbt compile</code>/<code>sbt test</code> commands you'd run locally, on a fresh,
+disposable environment/container with none of your local machine's
+incidental state (stale <code>target/</code> artifacts, environment variables,
+locally-cached test data) — its value comes entirely from reproducibility
+of the build/test pipeline, not from any testing capability sbt itself
+doesn't already have.</p>
 <h2 id="cheat-sheet">Cheat sheet<a class="headerlink" href="#cheat-sheet" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

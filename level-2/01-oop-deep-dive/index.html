@@ -1149,6 +1149,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2272,6 +2283,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2450,6 +2472,32 @@ from outside this file is <code>Account.open</code>, and that method can never r
 an invalid one. This "smart constructor" pattern shows up constantly once
 you've met <code>Either</code> properly in Module 4 — it's the idiomatic Scala
 alternative to throwing in a constructor.</p>
+<h2 id="how-it-actually-works">How It Actually Works<a class="headerlink" href="#how-it-actually-works" title="Permanent link">&para;</a></h2>
+<p>Linearization is computed once, at compile time, using a deterministic
+algorithm (a variant of C3 linearization): for <code>class C extends A with B
+with D</code>, the compiler builds a single ordered list of every ancestor —
+right-most trait first, each trait's own ancestors inserted depth-first
+before it, with duplicates collapsed to their first (right-most)
+occurrence. That ordered list becomes the actual <code>super</code> call chain baked
+into the compiled methods: each trait's compiled bytecode contains a call
+not to "the next trait textually" but to the <em>specific next class in this
+particular linearization for this particular class</em>, which is why the same
+trait's <code>super.speak()</code> can dispatch differently depending on what it's
+mixed into. <code>abstract override</code> is what makes this legal: normally you
+can't call <code>super.foo()</code> on an abstract method, but <code>abstract override</code>
+tells the compiler "trust me, whatever gets linearized before me will have
+provided a concrete implementation by the time this runs" — a promise
+checked when the final concrete class is assembled, not when the trait
+itself is compiled.</p>
+<p>Self-types (<code>this: Repository =&gt;</code>) compile to nothing extra in bytecode at
+all — no field, no interface, no runtime check. They're a compile-time-only
+constraint: the compiler simply refuses to compile any concrete class
+mixing in this trait unless it also mixes in (or extends) something
+conforming to <code>Repository</code>. This is different from <code>extends Repository</code>,
+which would make the trait itself a <code>Repository</code> and bytecode-visible as
+such; a self-type only requires the <em>combination</em> at the final class to
+satisfy it, letting you write mutually-dependent traits (<code>A</code> requires <code>B</code>,
+<code>B</code> requires <code>A</code>) that neither could extend directly without a cycle.</p>
 <h2 id="cheat-sheet">Cheat sheet<a class="headerlink" href="#cheat-sheet" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

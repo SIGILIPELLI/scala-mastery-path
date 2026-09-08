@@ -874,6 +874,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2250,6 +2261,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2383,6 +2405,31 @@ for returning multiple values without defining a class:</p>
 <a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="kd">val</span><span class="w"> </span><span class="p">(</span><span class="n">lo</span><span class="p">,</span><span class="w"> </span><span class="n">hi</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">minMax</span><span class="p">(</span><span class="nc">List</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span>
 <a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="n">println</span><span class="p">(</span><span class="s">s&quot;low=</span><span class="si">$</span><span class="n">lo</span><span class="s">, high=</span><span class="si">$</span><span class="n">hi</span><span class="s">&quot;</span><span class="p">)</span><span class="w">   </span><span class="c1">// low=1, high=9</span>
 </code></pre></div>
+<h2 id="how-it-actually-works">How It Actually Works<a class="headerlink" href="#how-it-actually-works" title="Permanent link">&para;</a></h2>
+<p>Scala's immutable <code>List</code> is a <strong>singly-linked list</strong> under the hood — <code>Nil</code>
+(empty list) and <code>::</code> (cons cell) all the way down. <code>List(1, 2, 3)</code> is
+literally sugar for <code>1 :: 2 :: 3 :: Nil</code>, three heap-allocated <code>::</code> objects
+each holding a head value and a reference to the rest. This is exactly why
+<code>list.head</code> and <code>list.tail</code> are O(1) (just reads a field) while
+<code>list.last</code> and <code>list(index)</code> are O(n) (you must walk every cons cell) —
+and why prepending (<code>x :: list</code>) is cheap (one new cell, structural sharing
+with the existing list) while appending (<code>list :+ x</code>) is expensive (the
+whole list must be copied, since the original cells are immutable and can't
+be told to point somewhere new).</p>
+<p><code>Map</code> and <code>Set</code> are backed by <strong>hash array mapped tries (HAMTs)</strong> in their
+default immutable form — a tree structure keyed by chunks of each element's
+hash code, giving effectively O(1) lookup/insert/remove (technically
+O(log₃₂ n), but that's ~1 for any realistic size) while still supporting
+structural sharing: <code>map + (k -&gt; v)</code> returns a new <code>Map</code> that shares most of
+its internal tree nodes with the original rather than copying the whole
+structure, which is how Scala keeps "immutable everything" from being
+prohibitively expensive.</p>
+<p>Tuples (<code>(1, "a", true)</code>) are a family of generic classes <code>Tuple1</code> through
+<code>Tuple22</code> (pre–Scala 3) or Scala 3's more flexible tuple encoding — each is
+just a small final class holding its elements as fields <code>_1</code>, <code>_2</code>, etc.
+<code>._1</code> access compiles to a direct field read, and pattern-matching a tuple
+(<code>case (x, y) =&gt; ...</code>) compiles to calls to those same accessors rather
+than any special tuple machinery.</p>
 <h2 id="cheat-sheet">Cheat sheet<a class="headerlink" href="#cheat-sheet" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

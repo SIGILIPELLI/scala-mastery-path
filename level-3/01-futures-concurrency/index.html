@@ -1570,6 +1570,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2362,6 +2373,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2503,6 +2525,39 @@ enough to have a dedicated combinator:</p>
 <p>All three <code>slowSquare</code> calls start at once, so this takes roughly 100ms
 total rather than 300ms — the whole point of using <code>Future</code> in the first
 place.</p>
+<h2 id="how-it-actually-works">How It Actually Works<a class="headerlink" href="#how-it-actually-works" title="Permanent link">&para;</a></h2>
+<p><code>Future[A]</code> is a mutable box plus a callback list, guarded by
+synchronization, sitting on top of the JVM's ordinary thread machinery —
+there's no special "async" bytecode. Creating a <code>Future(body)</code> submits
+<code>body</code> as a <code>Runnable</code>/<code>Callable</code>-like unit of work to an
+<code>ExecutionContext</code>, which is really just a thin wrapper around a
+<code>java.util.concurrent.Executor</code> (commonly <code>ForkJoinPool</code> — Scala's default
+global <code>ExecutionContext</code> is backed by a work-stealing <code>ForkJoinPool</code>
+sized to the number of CPU cores). When the pool has a free worker thread,
+it picks the queued task off the pool's work queue and runs it. <code>onComplete</code>
+doesn't poll — it registers a callback on the <code>Future</code>'s internal state; if
+the future is already complete, the callback runs (asynchronously, on the
+<code>ExecutionContext</code>) immediately, and if not, the completing thread invokes
+every registered callback once it finishes.</p>
+<p><code>for</code>-comprehensions over <code>Future</code>s desugar to <code>flatMap</code> exactly like
+<code>Option</code> (see <a href="../../level-2/04-option-either/">Module 4</a>), which is the
+mechanical reason the "sequential vs. parallel start" trap exists: <code>for { a
+&lt;- futureA(); b &lt;- futureB() } yield ...</code> only calls <code>futureB()</code> <em>inside</em>
+the lambda passed to <code>futureA().flatMap</code>, so <code>futureB()</code> (and the work it
+kicks off) doesn't start until <code>futureA</code> has already completed — the two
+network calls or computations run back-to-back, not concurrently, purely
+because of how <code>flatMap</code> chains callbacks. Starting both <code>Future</code>s as
+separate <code>val</code>s before the <code>for</code> avoids this because each <code>Future(...)</code>
+call submits its work to the pool immediately, independent of when you
+later read its result.</p>
+<p><code>Await.result</code> bridges back from async to sync by literally blocking the
+calling thread using <code>java.util.concurrent</code> primitives (a latch/condition
+variable under the hood) until the future's internal state transitions to
+complete or the timeout fires — which is exactly why doing this inside a
+thread the <code>ExecutionContext</code>'s own pool needs for other work can starve
+the pool: you've taken one of a fixed number of worker threads and parked
+it doing nothing but waiting, shrinking the pool's real parallelism for
+every other queued task.</p>
 <h2 id="cheat-sheet">Cheat sheet<a class="headerlink" href="#cheat-sheet" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

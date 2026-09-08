@@ -784,6 +784,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#exercise" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2283,6 +2294,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#exercise" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2434,6 +2456,32 @@ for sbt in depth).</p>
 refactoring, debugging, and sbt integration. <strong>VS Code</strong> with the "Metals"
 extension (a Scala language server) is a strong free/lightweight alternative.
 Either works well for everything in this course.</p>
+<h2 id="how-it-actually-works">How It Actually Works<a class="headerlink" href="#how-it-actually-works" title="Permanent link">&para;</a></h2>
+<p><code>sbt run</code> isn't one step — it's a pipeline. First the Scala compiler
+(<code>scalac</code>, invoked by sbt's incremental compiler, Zinc) parses <code>Hello.scala</code>
+into an abstract syntax tree, type-checks it, and lowers it to <strong>JVM
+bytecode</strong> — <code>.class</code> files under <code>target/scala-3.x/classes/</code>. <code>@main def
+hello(): Unit = ...</code> doesn't compile to a bare function (the JVM has no
+concept of a free-floating function); the compiler synthesizes a real class
+(something like <code>hello</code>) with a <code>public static void main(String[] args)</code>
+method whose body calls your <code>hello()</code> logic, because the JVM's process
+entry point has always been "a class with a <code>main</code> method," a convention
+inherited from Java. That's the actual mechanism <code>@main</code> hides from you.</p>
+<p>Zinc's <em>incrementality</em> is why the second <code>sbt run</code> is fast: it tracks which
+source files' compiled output (bytecode + a dependency graph of which
+classes reference which) is still valid, and only recompiles files whose
+source or transitive dependencies changed — full whole-project recompiles
+happen only on a clean build or a change that ripples widely (e.g. editing a
+trait extended everywhere).</p>
+<p>Once compiled, <code>java</code> (which <code>sbt run</code> shells out to under the hood, with the
+project's dependency jars on the classpath) loads the class, and the JVM's
+class loader resolves <code>println</code> to <code>scala.Predef.println</code>, which itself
+delegates to <code>System.out.println</code> — Scala's "standard library extras" layer
+sitting on top of the JVM's own <code>java.lang</code>/<code>java.io</code> classes. This is also
+why Scala interoperates so smoothly with Java libraries: after compilation
+there's no meaningful difference between a <code>.class</code> file that came from
+<code>.scala</code> source and one that came from <code>.java</code> source — the JVM only sees
+bytecode.</p>
 <h2 id="exercise">Exercise<a class="headerlink" href="#exercise" title="Permanent link">&para;</a></h2>
 <p>Create a new sbt project named <code>greeter</code>. Add a <code>@main</code> entry point that
 prints a greeting for three different names, one per line. Run it with

@@ -2137,6 +2137,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2296,6 +2307,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2437,6 +2459,39 @@ no real compilation-time or ownership benefit. Reach for multiple modules
 once you actually observe a reason — a genuinely reusable core library, a
 team boundary, or compile times that start to hurt in a single flat
 project — not by default.</p>
+<h2 id="how-it-actually-works">How It Actually Works<a class="headerlink" href="#how-it-actually-works" title="Permanent link">&para;</a></h2>
+<p><code>dependsOn</code> and <code>aggregate</code> control two entirely separate mechanisms in
+sbt's settings/task graph (see <a href="../../level-2/08-sbt-deep-dive/">Module 8</a>
+for the graph model itself): <code>dependsOn</code> wires one subproject's
+<em>classpath</em> to another's compiled output — <code>apiModule.dependsOn(coreModule)</code>
+means code in <code>apiModule</code> can actually import and call classes compiled
+in <code>coreModule</code>, and it forces <code>coreModule</code> to compile first as a real
+compile-time dependency. <code>aggregate</code>, by contrast, only affects <em>command
+propagation</em>: <code>root.aggregate(coreModule, apiModule)</code> means running
+<code>compile</code> or <code>test</code> at the root re-runs that same command across both
+listed subprojects, with zero implication about whether either can
+actually reference the other's code. This is exactly why the trap exists:
+a project can be aggregated (commands cascade to it) without being a
+<code>dependsOn</code> classpath dependency at all, and mixing the two up produces
+either surprising compile errors ("why can't this module see that
+class?" — missing <code>dependsOn</code>) or surprising build behavior ("why did
+<code>sbt test</code> run tests in a module I don't even use?" — an unwanted
+<code>aggregate</code>).</p>
+<p>Splitting into modules changes what the <em>incremental compiler</em> (Zinc,
+from <a href="../../level-2/08-sbt-deep-dive/">Module 8</a>) has to recompile on a
+given change: Zinc's dependency tracking operates at the level of
+<code>compile</code>-scoped classpaths, so editing a file in <code>apiModule</code> only
+requires recompiling <code>apiModule</code> and whatever (if anything) <code>dependsOn</code>
+depends on <code>apiModule</code> — <code>coreModule</code>, having no dependency back on
+<code>apiModule</code>, never gets touched. In one monolithic module, every file
+lives in the same compilation unit's dependency graph, so a broadly-used
+trait or a widely-imported file can force a much larger recompile on
+each build, however granular the specific edit actually was. This
+compile-boundary effect is also exactly the "over-modularizing small
+projects" trap: every module boundary adds its own settings/target
+directories and Zinc analysis overhead, which only pays off once a
+project is large enough that isolating recompilation to a genuinely
+smaller subgraph is worth that fixed cost.</p>
 <h2 id="cheat-sheet">Cheat sheet<a class="headerlink" href="#cheat-sheet" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

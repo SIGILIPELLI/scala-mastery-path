@@ -1986,6 +1986,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2274,6 +2285,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2423,6 +2445,43 @@ verified payload and explicitly gating the operation:</p>
 <p>Skipping this step — treating "the token is valid" as "the request is
 allowed" — is how services end up letting any logged-in user perform
 admin-only actions.</p>
+<h2 id="how-it-actually-works">How It Actually Works<a class="headerlink" href="#how-it-actually-works" title="Permanent link">&para;</a></h2>
+<p>Password hashing algorithms built for this purpose (bcrypt, scrypt,
+Argon2) are deliberately <strong>slow and memory-hard</strong> at the CPU/hardware
+level — bcrypt, for instance, runs a configurable number of rounds of a
+Blowfish-derived key schedule specifically designed to resist
+GPU/ASIC-based brute-force parallelization, unlike a general-purpose hash
+like SHA-256 which is <em>fast</em> by design (great for checksums, terrible for
+password storage, since fast hashing is exactly what makes brute-forcing
+cheap). Each hash also embeds a random <strong>salt</strong> generated per password,
+which is mixed into the hashing computation — this is the mechanical
+reason two users with the identical password get completely different
+stored hashes, defeating precomputed rainbow-table lookups.</p>
+<p>Comparing hashes with plain <code>==</code> is a real vulnerability because <code>==</code> on
+byte arrays or strings in most runtimes short-circuits at the first
+differing byte — an attacker measuring response time across many guesses
+can statistically infer how many leading bytes matched, incrementally
+reconstructing the hash. A <strong>constant-time comparison</strong> function walks
+every byte regardless of where a mismatch occurs (typically by XOR-ing
+corresponding bytes and OR-ing the results into an accumulator, only
+checking "was the accumulator ever nonzero" at the very end) so the
+comparison takes the same wall-clock time whether the first byte differs
+or the last one does.</p>
+<p>A signed token (JWT) is three base64url-encoded segments —
+header, payload (claims), and a signature — where the signature is an
+HMAC or RSA/ECDSA computation over the first two segments using a secret
+or private key only the server holds. Verifying a token means
+recomputing that same signature over the received header+payload and
+comparing it (constant-time, per above) against the signature segment
+the client sent — since forging a valid signature without the key is
+computationally infeasible, this is what makes the payload trustworthy
+without the server needing to store any session state per token. The
+"authentication proves identity, not permission" trap is a design fact
+independent of this mechanism: a validly-signed token proves <em>who signed
+off on these claims</em> (the server, when it issued the token to a specific
+user) — whether that user is <em>allowed</em> to perform a given action is a
+separate authorization check the application must still perform against
+the claims, since nothing about signature validity implies permission.</p>
 <h2 id="cheat-sheet">Cheat sheet<a class="headerlink" href="#cheat-sheet" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

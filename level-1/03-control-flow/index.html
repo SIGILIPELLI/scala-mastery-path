@@ -829,6 +829,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2272,6 +2283,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2414,6 +2436,26 @@ Compare two ways of summing a range:</p>
 <a href="../05-collections-basics/">Module 5</a> and deepened in
 <a href="../../level-2/03-collections-deep-dive/">Level 2</a>) before reaching for a
 <code>var</code> and a loop.</p>
+<h2 id="how-it-actually-works">How It Actually Works<a class="headerlink" href="#how-it-actually-works" title="Permanent link">&para;</a></h2>
+<p><code>if</code>/<code>else</code> being an <em>expression</em> rather than a statement is not just style
+— the compiler assigns it a type, computed as the least upper bound (the
+closest common supertype) of the <code>then</code> and <code>else</code> branch types. <code>if (x &gt; 0)
+"positive" else -1</code> type-checks to <code>Any</code> (the LUB of <code>String</code> and <code>Int</code>) —
+usually a sign you meant something else, since <code>Any</code> erases most useful
+methods. When both branches agree on a type, bytecode-wise <code>if</code>/<code>else</code>
+compiles to ordinary conditional jump instructions (<code>ifeq</code>, <code>ifne</code>, <code>goto</code>)
+just like Java's <code>if</code> — the "expression" nature is purely a compile-time
+type-checking feature layered on top of the same JVM control-flow
+primitives.</p>
+<p>A Scala <code>for</code> loop over a range (<code>for i &lt;- 1 to 5 do ...</code>) is not a JVM
+looping construct on its own — the compiler desugars it into calls on
+whatever <code>1 to 5</code> returns (a <code>Range</code>), specifically <code>foreach</code>, which
+internally runs an ordinary <code>while</code> loop over the range's <code>start</code>/<code>end</code>/
+<code>step</code> fields. A <code>while</code> loop, by contrast, compiles almost directly to
+JVM bytecode's <code>goto</code>-based loop shape with no allocation at all — which is
+why tight numeric loops in performance-sensitive Scala code sometimes still
+reach for <code>while</code> (see <a href="../../level-3/08-performance-profiling/">Level 3's performance module</a>)
+even though <code>for</code> and <code>foreach</code> read better.</p>
 <h2 id="cheat-sheet">Cheat sheet<a class="headerlink" href="#cheat-sheet" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

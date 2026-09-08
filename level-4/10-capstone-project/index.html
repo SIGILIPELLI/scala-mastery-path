@@ -2151,6 +2151,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#stretch-goals" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2252,6 +2263,17 @@
     <span class="md-ellipsis">
       
         Every level, one file
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
       
     </span>
   </a>
@@ -2440,6 +2462,31 @@ return <code>401</code> rather than leaking data or crashing.</p>
 </tr>
 </tbody>
 </table>
+<h2 id="how-it-actually-works">How It Actually Works<a class="headerlink" href="#how-it-actually-works" title="Permanent link">&para;</a></h2>
+<p>This capstone's per-request token check exercises the exact signature
+verification mechanism from <a href="../04-security-best-practices/">Level 4's security
+module</a>: each request's token is
+re-hashed/verified against the server's signing key before any handler
+logic runs, and because that verification is a pure computation over
+bytes (no database lookup required for a stateless JWT-style token), it
+adds essentially no I/O latency compared to the <code>Db</code> calls the same
+request will make afterward — which is a large part of why stateless
+token auth scales well versus a server-side session store that requires a
+database round trip on every request just to check who's logged in.</p>
+<p>The single shared <code>Db.conn</code> (one JDBC connection reused across all
+requests) is a concurrency bottleneck for the same reason described in
+<a href="../../level-3/03-databases/">Level 3's databases module</a>: a JDBC
+<code>Connection</code> isn't safe for concurrent use by multiple threads issuing
+statements at the same time, so every request handler that touches <code>Db</code>
+is implicitly serialized against every other one, however many worker
+threads the HTTP layer has free — this is exactly the tension the
+capstone's actor-based stretch goal asks you to reason about:
+replacing shared mutable connection state with one actor's private
+mailbox-serialized state (the mechanism from <a href="../../level-3/09-akka-actors-basics/">Level 3's actors
+module</a>) removes the <em>need</em> for
+a database-level lock, because each actor's single-message-at-a-time
+processing already guarantees no two operations on that user's data run
+concurrently.</p>
 <h2 id="stretch-goals">Stretch goals<a class="headerlink" href="#stretch-goals" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Replace the comma-delimited request bodies (<code>"ada,hunter2"</code>) with real

@@ -1272,6 +1272,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2294,6 +2305,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2477,6 +2499,36 @@ temp file, a mutable collection), mix in <code>BeforeAndAfterEach</code> and ove
 <p>Each test sees a freshly reset <code>buffer</code>, so append side effects in one test
 never leak into another — a common source of order-dependent, flaky test
 suites when fixtures are shared without a reset.</p>
+<h2 id="how-it-actually-works">How It Actually Works<a class="headerlink" href="#how-it-actually-works" title="Permanent link">&para;</a></h2>
+<p>ScalaTest's <code>AnyFunSuite</code> and <code>AnyFlatSpec</code> look like two different DSLs,
+but both compile down to the same underlying model: each <code>test("...") {
+... }</code> or <code>"it" should "..." in { ... }</code> block is registered, at
+<em>construction time</em> (when the test class's constructor runs), into an
+internal list of test cases held by the suite instance — the string
+becomes a key, and the block becomes a closure (compiled to a <code>Function0</code>,
+see <a href="../../level-1/04-functions/">Module 4's functions-as-values</a>) stored
+against it. Running the suite doesn't re-read your source; it just
+iterates that already-built list and invokes each closure, catching any
+thrown exception (including a failed <code>assert</code> or matcher, which work by
+throwing a <code>TestFailedException</code>) to report pass/fail without one test's
+exception aborting the whole run.</p>
+<p>Matchers like <code>result should be(5)</code> and <code>list should contain(3)</code> are
+ordinary method calls chained together using Scala's ability to define
+methods with symbolic or word-like names and to omit dots/parens in
+infix position: <code>should</code> is a method on an implicit wrapper class around
+<code>result</code>, taking <code>be(5)</code> — itself a small "matcher" object — as its
+argument. There's no keyword <code>should</code> in the language; it's a library
+convention built entirely from implicit conversions (see <a href="../06-implicits-basics/">Module
+6</a>) and Scala's flexible method-call syntax, which
+is also why writing your own custom matcher is "just" implementing the
+right trait rather than hooking into compiler internals.</p>
+<p>Fixtures that recreate state per test (rather than sharing one mutable
+instance across tests) matter because sbt normally runs all tests in a
+suite against <strong>one shared instance</strong> of that suite class by default —
+if a <code>var</code> were declared directly in the class body instead of freshly set
+up per test via a fixture method, test order could leak state between
+tests non-deterministically, which is precisely the bug fixtures are
+designed to make structurally impossible.</p>
 <h2 id="cheat-sheet">Cheat sheet<a class="headerlink" href="#cheat-sheet" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

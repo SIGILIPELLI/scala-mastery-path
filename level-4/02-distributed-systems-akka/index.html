@@ -1941,6 +1941,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2296,6 +2307,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2421,6 +2443,39 @@ Reach for a cluster only once a single node's actors genuinely can't handle
 the throughput or need to survive a node crash — plain Level 3 actors
 inside one <code>ActorSystem</code> remain the right default for anything that fits on
 one machine.</p>
+<h2 id="how-it-actually-works">How It Actually Works<a class="headerlink" href="#how-it-actually-works" title="Permanent link">&para;</a></h2>
+<p>Akka Cluster's membership isn't a single source of truth any node
+consults — it's maintained by a <strong>gossip protocol</strong>: each node
+periodically exchanges its local view of cluster state (who's up, who's
+joining, who's been marked unreachable) with a few random peers, and over
+several rounds this information propagates across the whole cluster
+without any node needing to talk to every other node directly. This is
+exactly the mechanical reason "membership changes are eventual, not
+instant": a node that just joined is known immediately only to whichever
+seed node it contacted, and it takes multiple gossip rounds (governed by
+a configurable interval, typically ~1 second) before every node
+converges on the same view — there is no synchronous "join complete"
+signal broadcast to the whole cluster.</p>
+<p>Failure detection underneath this uses a <strong>Phi Accrual Failure
+Detector</strong> rather than a simple fixed heartbeat timeout: each node tracks
+the <em>statistical distribution</em> of recent heartbeat arrival times from its
+peers and computes a continuously-varying suspicion level ("phi") based
+on how anomalous a delay is relative to that peer's own historical
+pattern, rather than declaring "dead" the instant one heartbeat is late.
+This adapts to network conditions (a peer with historically jittery
+heartbeats gets more benefit of the doubt) but also means the "trap" of
+distribution not being free is structural: cross-node coordination always
+costs at least one network round trip's worth of latency and carries
+irreducible uncertainty about a remote node's true liveness.</p>
+<p>Cluster Sharding builds a consistent-hashing-like layer on top of this
+gossip/membership substrate: each entity id is deterministically mapped to
+a "shard," and shards are distributed across nodes by a coordinator
+(itself a singleton actor elected via the cluster's own membership
+mechanism) that rebalances shard ownership as nodes join or leave —
+message delivery to <code>entityId</code> gets transparently routed to whichever
+node currently owns that entity's shard, using the same actor mailbox
+mechanics from <a href="../../level-3/09-akka-actors-basics/">Level 3</a> underneath,
+just with an extra routing hop through the shard region actor.</p>
 <h2 id="cheat-sheet">Cheat sheet<a class="headerlink" href="#cheat-sheet" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

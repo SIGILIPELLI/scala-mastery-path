@@ -1328,6 +1328,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2294,6 +2305,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2443,6 +2465,39 @@ parse failure into an <code>Option</code>/<code>Either</code> instead of an unca
 ceremony — it turns "a malformed response crashes the program" into "a
 malformed response is a value the caller has to explicitly handle," exactly
 the philosophy Module 4 built up.</p>
+<h2 id="how-it-actually-works">How It Actually Works<a class="headerlink" href="#how-it-actually-works" title="Permanent link">&para;</a></h2>
+<p>"Deriving JSON for a case class" without writing any encoder by hand relies
+on the same compile-time mechanism as <a href="../06-implicits-basics/">implicit resolution</a>:
+libraries like upickle generate a <code>ReadWriter[YourCaseClass]</code> at <em>compile
+time</em> using macros (or, in some libraries, Scala 3's inline/derivation
+features) that inspect the case class's constructor parameter list —
+available because a case class's field names and types are part of its
+public, compiler-visible signature — and mechanically produce code that
+walks each field, converting it via that field's own derived
+<code>ReadWriter</code>, recursively. Nothing is discovered via reflection at
+runtime; the encoding/decoding logic for <code>Employee(name: String, salary:
+Double)</code> is generated once, as ordinary methods, when the project
+compiles — which is also why forgetting to import the right implicit
+gives a compile error ("no ReadWriter found") rather than a runtime
+surprise.</p>
+<p>The <code>Option</code> serialization "trap" comes directly from this mechanism:
+there's no single universal JSON representation of "a missing field" vs.
+"a field present with value null" vs. "<code>None</code>," so each library's derived
+<code>ReadWriter[Option[A]]</code> makes its own choice (upickle typically omits the
+key entirely for <code>None</code>, or represents it depending on version/config) —
+the behavior is a property of the specific derived instance you're using,
+not something intrinsic to <code>Option</code> itself.</p>
+<p>Parsing JSON you don't have a case class for works because underneath the
+case-class layer, every JSON library has an untyped AST type (e.g.
+upickle's <code>ujson.Value</code>, a sealed hierarchy of <code>Str</code>, <code>Num</code>, <code>Obj</code>, <code>Arr</code>,
+<code>Bool</code>, <code>Null</code>) — the exact same sealed-trait-plus-case-classes pattern
+from <a href="../../level-1/07-case-classes/">Level 1</a> and <a href="../../level-1/08-pattern-matching-intro/">Module
+8</a>, just modeling "any JSON value"
+instead of your domain type. <code>read[YourCaseClass](json)</code> is really "parse
+to this AST, then run the derived decoder against the AST" — two separate
+compiler-generated/generic stages, which is why parsing to <code>ujson.Value</code>
+and then manually navigating it (<code>.obj("field").str</code>) is always available
+as a fallback when no case class fits the shape.</p>
 <h2 id="cheat-sheet">Cheat sheet<a class="headerlink" href="#cheat-sheet" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

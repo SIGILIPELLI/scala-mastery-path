@@ -812,6 +812,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#exercise" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2283,6 +2294,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#exercise" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2455,6 +2477,34 @@ them in error messages or library signatures will save you confusion later.</p>
 </tr>
 </tbody>
 </table>
+<h2 id="how-it-actually-works">How It Actually Works<a class="headerlink" href="#how-it-actually-works" title="Permanent link">&para;</a></h2>
+<p><code>val</code> and <code>var</code> are a source-level distinction only — the JVM bytecode
+doesn't have an "immutable local variable" concept for method-local values;
+a <code>val</code> inside a method just becomes a bytecode local slot that the compiler
+guarantees (via type checking, not runtime enforcement) is only ever
+stored to once. The safety is compile-time, not a runtime lock. Where it
+<em>does</em> show up in bytecode is fields: a <code>val</code> member of a class compiles to
+a <code>private final</code> field plus a public getter method, while a <code>var</code> member
+compiles to a plain <code>private</code> field with both a getter and a setter — the
+<code>final</code> modifier is the JVM-level guarantee the compiler is relying on.</p>
+<p><code>Int</code>, <code>Double</code>, <code>Boolean</code>, etc. look like objects (you can call <code>.abs</code> or
+<code>.toDouble</code> on a literal), but the compiler erases that appearance whenever
+it can: in most contexts an <code>Int</code> is compiled straight down to the JVM's
+primitive <code>int</code>, and <code>i.toDouble</code> becomes a single <code>i2d</code> bytecode
+instruction, not a method call on a heap object. Scala only "boxes" a
+primitive into an actual object (<code>java.lang.Integer</code>, etc.) when it has to
+— e.g. storing it in a generic collection like <code>List[Int]</code> before Scala's
+specialization kicks in, or when code demands <code>Any</code>. This is why <code>Any</code> sits
+at the top of the type hierarchy above both objects and value types like
+<code>Int</code>: on the JVM, <code>Any</code> unifies things that are fundamentally different at
+the bytecode level (object references vs. raw primitives), and the compiler
+inserts the boxing/unboxing conversions for you wherever the two need to
+mix.</p>
+<p>String interpolation (<code>s"..."</code>) is a compile-time macro-like rewrite, not
+string concatenation with extra syntax: <code>s"${a} + ${b} = ${a + b}"</code> is
+rewritten by the compiler into a call to <code>StringContext(...).s(a, b, a + b)</code>,
+which under the hood builds the result with a <code>StringBuilder</code> — the same
+mechanism you'd get from manual <code>+</code> concatenation, just generated for you.</p>
 <h2 id="exercise">Exercise<a class="headerlink" href="#exercise" title="Permanent link">&para;</a></h2>
 <p>Declare a <code>val</code> for your name, a <code>val</code> for your birth year, and a <code>var</code> for a
 running total starting at <code>0</code>. Use string interpolation to print a sentence

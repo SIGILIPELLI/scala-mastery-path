@@ -1205,6 +1205,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2272,6 +2283,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2471,6 +2493,38 @@ walking the whole linked list — while the equivalent operations on <code>Set</
 and <code>Vector</code> are effectively constant time. If you're checking membership
 repeatedly, convert to a <code>Set</code> once; if you're indexing repeatedly, use a
 <code>Vector</code>.</p>
+<h2 id="how-it-actually-works">How It Actually Works<a class="headerlink" href="#how-it-actually-works" title="Permanent link">&para;</a></h2>
+<p><code>map</code>, <code>filter</code>, and <code>flatMap</code> on a strict collection like <code>List</code> are each
+a full, eager pass: <code>list.map(f).filter(g)</code> allocates an entire intermediate
+list from <code>map</code> before <code>filter</code> even starts, then allocates a second list
+for the filtered result — two full traversals and two heap allocations of
+list nodes, even though logically you only care about the final elements.
+<code>fold</code>/<code>reduce</code> avoid that by threading an accumulator through a single
+traversal, applying the combining function to each element as it goes —
+which is also why <code>foldLeft</code> is stack-safe for large collections (it
+compiles down to an iterative loop over the list's cons cells) while a
+naive hand-written recursive combine over the same list could stack
+overflow.</p>
+<p>A <strong>lazy view</strong> (<code>list.view.map(f).filter(g)</code>) restructures this
+completely: instead of eagerly building intermediate collections, <code>.view</code>
+wraps the underlying collection in a chain of small transformer objects
+that record <em>what</em> to do without doing it. Nothing actually runs element-by
+element until you call a "strict" operation like <code>.toList</code> or <code>.force</code> —
+at that point, each element is pulled through the whole chain of
+transformations one at a time, so <code>map</code> and <code>filter</code> fuse into a single
+pass with zero intermediate collections. This is exactly the same
+lazy-evaluation idea behind <code>Iterator</code>, and it's why views pay off most on
+large collections or chains, and can cost more than they save on tiny
+ones (the wrapping overhead isn't free).</p>
+<p><code>groupBy</code> builds its result using the same hash-trie <code>Map</code> machinery
+described in <a href="../../level-1/05-collections-basics/">Level 1's collections module</a>
+— it does one pass computing each element's key via your function,
+accumulating elements into growable buffers per key, then converts those
+buffers to the final <code>List</code>s in a second pass. <code>partition</code> is a
+specialization of the same idea with exactly two buckets (<code>true</code>/<code>false</code>)
+computed in a single traversal, which is why <code>partition(p)</code> is faster than
+the equivalent <code>(list.filter(p), list.filterNot(p))</code> — that alternative
+walks the source list twice.</p>
 <h2 id="cheat-sheet">Cheat sheet<a class="headerlink" href="#cheat-sheet" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

@@ -1772,6 +1772,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2318,6 +2329,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2473,6 +2495,37 @@ plain <code>!</code> (tell) and modeling the <em>response</em> as another messag
 known recipient wherever the caller doesn't need to block for a single
 answer; reserve <code>ask</code> for edges of the actor system, like an HTTP handler
 that genuinely needs a value before it can respond to its own caller.</p>
+<h2 id="how-it-actually-works">How It Actually Works<a class="headerlink" href="#how-it-actually-works" title="Permanent link">&para;</a></h2>
+<p>Every actor owns a <strong>mailbox</strong> — by default an unbounded (or configurably
+bounded) queue that other threads/actors push messages onto — and the
+guarantee that "actors don't run synchronously" comes from how the
+<code>ActorSystem</code>'s <strong>dispatcher</strong> schedules work against that mailbox. A
+dispatcher is, under the hood, backed by a thread pool (often a
+<code>ForkJoinPool</code>, the same executor family behind <code>Future</code>'s
+<code>ExecutionContext</code> in <a href="../01-futures-concurrency/">Module 1</a>) that doesn't
+dedicate one thread per actor — instead, when a message lands in an idle
+actor's mailbox, the dispatcher schedules a small unit of work ("process
+up to N queued messages from this mailbox") onto whichever pool thread is
+free. This is the actual mechanism behind Akka's core safety guarantee:
+an actor processes its mailbox <strong>one message at a time, never
+concurrently with itself</strong>, because the dispatcher only ever has at most
+one such scheduled unit of work active per actor at once — so an actor's
+mutable internal state (the pattern in "actors with internal state") never
+needs locks or synchronization; the single-message-at-a-time scheduling
+<em>is</em> the concurrency control.</p>
+<p><code>tell</code> (<code>!</code>) is fire-and-forget because it does nothing more than enqueue
+the message object onto the target's mailbox and return immediately — no
+thread blocks waiting for processing. The <code>ask</code> pattern (<code>?</code>) is built
+entirely on top of <code>tell</code> plus <code>Future</code>: internally, <code>ask</code> creates a
+short-lived, hidden temporary actor whose only job is to receive exactly
+one reply and complete a <code>Promise</code> (the mutable, settable counterpart to a
+<code>Future</code>) with it, sends your message to the target with that temporary
+actor's address as the sender, and returns the <code>Future</code> half of that
+promise to you immediately. This is precisely why "<code>ask</code> everywhere
+defeats the point": each <code>ask</code> call allocates a temporary actor and a
+<code>Future</code>, and forces the caller back into blocking-or-callback territory
+around each request/response pair — the overhead and back-pressure loss
+<code>tell</code>-based message-passing was designed to avoid in the first place.</p>
 <h2 id="cheat-sheet">Cheat sheet<a class="headerlink" href="#cheat-sheet" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

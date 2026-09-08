@@ -868,6 +868,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2294,6 +2305,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2421,6 +2443,32 @@ tail position (so it compiles to a loop, not stack-consuming recursion):</p>
 <p>If a function marked <code>@tailrec</code> isn't actually tail-recursive, the compiler
 raises an error at compile time rather than letting you discover a
 <code>StackOverflowError</code> later at runtime — a nice safety net.</p>
+<h2 id="how-it-actually-works">How It Actually Works<a class="headerlink" href="#how-it-actually-works" title="Permanent link">&para;</a></h2>
+<p>A plain <code>def</code> compiles to an ordinary JVM instance (or static) method — no
+surprises there. The interesting mechanism is what happens when you turn a
+method into a <em>value</em> with <code>val addFn = add</code> or write a lambda: Scala
+compiles that into an instance of a <code>scala.FunctionN</code> interface (<code>Function1</code>
+for one argument, <code>Function2</code> for two, and so on, up to 22 — the historic
+reason Scala tuples and function arities top out at 22). Each <code>FunctionN</code>
+trait defines an <code>apply</code> method, so <code>addFn(3, 4)</code> is really sugar for
+<code>addFn.apply(3, 4)</code>. A lambda like <code>(x: Int) =&gt; x * 2</code> becomes, since Scala
+2.12+, an <code>invokedynamic</code> call site backed by Java's <code>LambdaMetafactory</code> —
+the JVM generates the implementing class at runtime the first time that
+call site executes and caches it, rather than the compiler pre-generating a
+named anonymous class for every lambda the way older Scala/Java did. This
+is why lambdas are cheap but not entirely free: the first invocation of a
+given lambda literal pays a one-time class-generation cost.</p>
+<p>Recursion has no special bytecode support on the JVM (no built-in
+tail-call instruction), so a recursive <code>def</code> normally consumes one stack
+frame per call and can overflow on deep recursion. The Scala compiler
+optimizes the specific case of <strong>self-tail-recursion</strong> — a call to the
+function itself in tail position — by rewriting it into a <code>while</code>-style
+loop with mutated local variables, eliminating the stack growth entirely.
+<code>@tailrec</code> doesn't enable this optimization; it only asks the compiler to
+<em>fail the build</em> if the rewrite ISN'T possible, catching accidental
+non-tail recursion (e.g. <code>n * factorial(n - 1)</code>, where the multiplication
+happens after the recursive call returns) at compile time instead of as a
+<code>StackOverflowError</code> at runtime.</p>
 <h2 id="cheat-sheet">Cheat sheet<a class="headerlink" href="#cheat-sheet" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

@@ -1455,6 +1455,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2359,6 +2370,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2674,6 +2696,26 @@ it — the exact numbers above will differ by the time you try it yourself.)</p>
   temperature_2m_max,temperature_2m_min</code> instead of <code>current=...</code>, and
   render one line per day using the same <code>Sky.describe</code> logic.</li>
 </ul>
+<h2 id="how-it-actually-works">How It Actually Works<a class="headerlink" href="#how-it-actually-works" title="Permanent link">&para;</a></h2>
+<p>The HTTP call to the geocoding/forecast APIs blocks the calling thread
+until a response arrives — a synchronous network call on the JVM parks the
+thread in the OS's socket-read syscall, and nothing else in this
+single-threaded CLI runs until it returns (this is precisely the
+constraint <a href="../../level-3/01-futures-concurrency/">Level 3's Futures module</a>
+exists to relax, by moving that wait off the main thread). Parsing the
+JSON response into <code>GeoResult</code>/<code>Sky</code> case classes runs the same
+compile-time-derived decoder machinery from <a href="../07-working-with-json/">Module
+7</a> — no reflection scans the response at runtime;
+the decoder was generated once when this project compiled, purely from
+each case class's constructor signature.</p>
+<p><code>Sky.describe</code>'s branching over weather codes is ordinary pattern matching
+over <code>Int</code> ranges, which the compiler can't always turn into a single
+<code>tableswitch</code> (unlike matching discrete literal values) when the cases are
+open-ended range guards — it falls back to a sequence of conditional
+bytecode tests evaluated top-to-bottom, same as an <code>if</code>/<code>else if</code> chain,
+which is a detail worth knowing before assuming every <code>match</code> gets
+constant-time dispatch (see <a href="../../level-1/08-pattern-matching-intro/">Level 1's pattern-matching
+module</a>).</p>
 <p>Completing this project means you're ready for <strong>Level 3 · Advanced</strong>.</p>
 
 

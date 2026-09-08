@@ -1345,6 +1345,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2272,6 +2283,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2447,6 +2469,36 @@ reliable habits avoid the confusion entirely:</p>
   (<code>sbt</code> then <code>project cli</code> then plain <code>run</code>), and switch back
   (<code>project root</code>) when you're done.</li>
 </ul>
+<h2 id="how-it-actually-works">How It Actually Works<a class="headerlink" href="#how-it-actually-works" title="Permanent link">&para;</a></h2>
+<p><code>build.sbt</code> isn't a config file in the INI/YAML sense — it's Scala source
+code, evaluated by sbt's own embedded interpreter, that builds up a
+dependency graph of <strong>settings</strong> and <strong>tasks</strong>. <code>name := "hello-scala"</code> is
+itself a method call: <code>:=</code> is defined on <code>SettingKey</code>, and it returns a
+<code>Setting[T]</code> value describing "when this key is asked for, produce this
+value" — sbt collects every such <code>Setting</code> across your <code>build.sbt</code> (and any
+plugins) into one big graph before running anything. This is why sbt
+startup and reload feels like a compile step: it genuinely is one — your
+build definition is compiled once and cached, which is also why the first
+<code>sbt</code> invocation after touching <code>build.sbt</code> is slow (recompiling the build
+definition itself) while subsequent commands in the same session are fast.</p>
+<p>Tasks (<code>compile</code>, <code>run</code>, <code>test</code>, and custom ones you define with <code>.value</code>)
+are the dynamic counterpart to settings: where a setting is computed once
+per session and cached, a task re-runs its body every time it's invoked,
+and its dependencies are wired up through the <code>.value</code> macro — writing
+<code>(Compile / sources).value</code> inside a task body doesn't call a method at
+runtime, the macro rewrites your task definition at compile time into an
+explicit dependency edge in sbt's task graph, so sbt knows to run
+<code>sources</code> first and thread its result in. This static graph-building is
+also why you can't write <code>if (cond) x.value else y.value</code> naively — both
+branches' dependencies get wired in regardless of which branch runs,
+because the graph is fixed before any task executes.</p>
+<p>Multi-module scoping (<code>root/compile</code>, <code>sub-module/test</code>) reflects the same
+graph: each subproject gets its own axis in the settings/task key space
+(project, configuration, task), and <code>run</code>/<code>test</code> without a scope resolve
+against whichever project's <code>build.sbt</code> context you're currently in at the
+sbt shell — the classic "trap" of running <code>test</code> at the aggregate root and
+expecting it to mean one specific submodule comes directly from this
+three-axis key resolution defaulting differently than you'd guess.</p>
 <h2 id="cheat-sheet">Cheat sheet<a class="headerlink" href="#cheat-sheet" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

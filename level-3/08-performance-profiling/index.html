@@ -1727,6 +1727,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2284,6 +2295,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2431,6 +2453,36 @@ JVMs and prints throughput/latency with confidence intervals — reach for
 this once a hand-rolled comparison suggests something worth measuring
 rigorously, especially before changing performance-sensitive production
 code based on a microbenchmark.</p>
+<h2 id="how-it-actually-works">How It Actually Works<a class="headerlink" href="#how-it-actually-works" title="Permanent link">&para;</a></h2>
+<p><code>System.nanoTime</code> around a single run is unreliable for a mechanical
+reason specific to the JVM: bytecode starts out <strong>interpreted</strong>, and the
+JVM's JIT (Just-In-Time) compiler only kicks in and compiles a method to
+optimized native machine code after it's been called enough times to
+cross a "hot method" threshold (by default a few thousand invocations for
+C2, the JVM's top-tier optimizing compiler). A timing loop's first
+iterations run interpreted, dramatically slower than the steady-state
+speed the same code reaches once JIT-compiled — plus the JIT can
+speculatively deoptimize and recompile methods as it learns more about
+actual runtime types, adding more variance. This is exactly why proper
+benchmarking (JMH) runs explicit "warmup" iterations before measuring:
+it's giving the JIT time to reach steady state so the measurement
+reflects real production performance, not interpreter overhead.</p>
+<p>The classic <code>List</code> append trap (<code>list :+ x</code> in a loop) is a direct
+consequence of <code>List</code>'s singly-linked-list structure (see <a href="../../level-1/05-collections-basics/">Level 1's
+collections module</a>): appending to
+the end requires copying every existing cons cell to build a new list
+whose last cell points at the new element, making each <code>:+</code> an O(n)
+operation and the whole loop O(n²). Reaching for <code>ListBuffer</code> (a mutable
+buffer with O(1) amortized append, converted to an immutable <code>List</code> once
+at the end) or building the list in reverse with <code>::</code> and reversing once
+sidesteps this because both avoid ever re-copying the growing structure
+on each step.</p>
+<p>JMH avoids hand-rolled timing's other trap — the JIT optimizing away work
+whose result is never used (dead code elimination) — by having the
+benchmark method return its result and by using <strong>blackholes</strong>, an actual
+runtime mechanism (a JMH-provided object your benchmark passes computed
+values into) that the JIT cannot see through, forcing it to treat the
+computation as having an observable side effect it can't eliminate.</p>
 <h2 id="cheat-sheet">Cheat sheet<a class="headerlink" href="#cheat-sheet" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

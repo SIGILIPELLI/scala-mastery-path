@@ -1907,6 +1907,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2284,6 +2295,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2421,6 +2443,40 @@ value and only decide <em>when</em> it executes at one point:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>starting
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>sum: 42
 </code></pre></div>
+<h2 id="how-it-actually-works">How It Actually Works<a class="headerlink" href="#how-it-actually-works" title="Permanent link">&para;</a></h2>
+<p>A <code>Monad[F[_]]</code> is mechanically nothing beyond a <code>Functor</code> (from <a href="../../level-3/04-functional-patterns/">Level
+3</a>) plus <code>flatMap</code> and <code>pure</code>
+(wrap a raw value), and <code>for</code>-comprehensions are literally defined by the
+compiler as syntax that desugars to <code>flatMap</code>/<code>map</code> calls — there's no
+independent "monad" concept the compiler understands; it just requires
+whatever type you use in a <code>for</code> to have methods named <code>flatMap</code> and <code>map</code>
+with compatible signatures (this is <em>structural</em>, not nominal: your type
+doesn't need to extend any <code>Monad</code> trait for <code>for</code> to work on it, it just
+needs the right method shapes). Why <code>Validated</code> deliberately isn't a
+monad comes down to <code>flatMap</code>'s own signature: <code>flatMap</code> must decide what
+to do based on the result of the <em>previous</em> step before it can even
+construct the next one, which structurally forces short-circuiting on
+failure — there's no way to write a lawful <code>flatMap</code> for <code>Validated</code> that
+also accumulates multiple independent failures, because by the time
+<code>flatMap</code> is called, only one failure (or success) is available to
+inspect. <code>mapN</code> sidesteps this by not chaining at all: it takes several
+already-computed <code>Validated</code> values up front and combines them with a
+function that only runs if <em>all</em> are <code>Valid</code>, so failures from
+independent steps can all be accumulated by <code>Validated</code>'s own <code>combine</code>
+logic (a <code>Monoid</code>-like operation) before any short-circuiting would need
+to happen.</p>
+<p>Cats Effect's <code>IO[A]</code> fixes a subtlety <code>Future</code> has by construction:
+<code>Future(sideEffect())</code> runs <code>sideEffect()</code> <strong>eagerly</strong>, the instant the
+<code>Future</code> is constructed, on whatever <code>ExecutionContext</code> is implicitly in
+scope — meaning a <code>val</code> binding a <code>Future</code> has already started work
+before anything reads it. <code>IO</code> instead compiles down to a <strong>data
+structure describing a computation</strong> (a tree of suspended thunks and
+combinators, not a running computation) and does nothing until you
+explicitly call <code>.unsafeRunSync()</code> or hand it to the Cats Effect runtime —
+which is why <code>IO</code> is referentially transparent (an <code>IO</code> value can be
+passed around, reused, or discarded with fully predictable behavior,
+never triggering a side effect just by existing) while a <code>Future</code> value
+already represents work in flight the moment you have one.</p>
 <h2 id="cheat-sheet">Cheat sheet<a class="headerlink" href="#cheat-sheet" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

@@ -1963,6 +1963,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2284,6 +2295,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2405,6 +2427,33 @@ moment someone adds a new route and forgets to copy the log line into it.
 Wrapping the cross-cutting concern (timing, and in a real service, request
 logging/tracing) once around the whole handler is what keeps every route
 observable by construction rather than by discipline.</p>
+<h2 id="how-it-actually-works">How It Actually Works<a class="headerlink" href="#how-it-actually-works" title="Permanent link">&para;</a></h2>
+<p>"Structured validation errors" accumulating multiple problems from one
+request relies on exactly the applicative-not-monadic combination
+mechanism from <a href="../01-advanced-functional-programming/">Module 1</a>
+(<code>Validated</code>/<code>mapN</code>): each field validator runs independently and reports
+its own success/failure without short-circuiting the others, then the
+results are combined in one pass — which is why a single malformed
+request can surface every validation problem at once instead of forcing
+the client through a fix-one-error-and-resubmit loop.</p>
+<p>API versioning in the URL path (<code>/v1/tasks</code> vs. <code>/v2/tasks</code>) or a header
+is, mechanically, just another dimension of the same <code>(method, path)</code>
+pattern-matching dispatch from <a href="../../level-3/02-building-apis/">Level 3</a>
+— the version segment is parsed out and matched on exactly like any other
+path component, with no separate "versioning" machinery in the HTTP layer
+itself; it's a routing convention layered on top of ordinary string/path
+matching.</p>
+<p>The health check <code>finally</code> block matters for a JVM-specific reason: an
+exception propagating up through a request handler, if not caught, can
+leave partially-acquired resources (an opened <code>Connection</code> from <a href="../../level-3/03-databases/">Level
+3's database module</a>, a metrics timer never
+stopped) in a leaked state, because the JVM's exception unwinding only
+guarantees <code>finally</code> blocks run — it does not automatically release
+resources the way a language with deterministic destructors or a
+<code>try</code>-with-resources-everywhere convention might. Using <code>finally</code> for
+observability (always recording a request's outcome, success or failure)
+rather than only wrapping the happy path is what guarantees your metrics
+and health signals reflect reality even when handlers throw.</p>
 <h2 id="cheat-sheet">Cheat sheet<a class="headerlink" href="#cheat-sheet" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

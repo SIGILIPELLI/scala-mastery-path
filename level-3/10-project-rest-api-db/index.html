@@ -1805,6 +1805,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#stretch-goals" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2317,6 +2328,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#stretch-goals" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2502,6 +2524,29 @@ fixed <code>Db.insert</code>.</p>
 </tr>
 </tbody>
 </table>
+<h2 id="how-it-actually-works">How It Actually Works<a class="headerlink" href="#how-it-actually-works" title="Permanent link">&para;</a></h2>
+<p><code>Executors.newFixedThreadPool</code> matters here specifically because JDBC
+calls are <strong>blocking</strong> (see <a href="../03-databases/">Module 3</a>) — each HTTP
+request handler that talks to the database parks its thread in a socket
+read while waiting on SQLite, so a fixed thread pool sized above 1 is what
+lets multiple requests' blocking database work actually overlap rather
+than serializing behind a single-threaded server loop. This is a
+deliberately different concurrency strategy from Akka's actor mailbox
+scheduling in <a href="../09-akka-actors-basics/">Module 9</a> — here, concurrency
+comes from <em>many OS threads each blocking independently</em>, not from
+message-passing over a small pool, which is a reasonable trade for a
+small service but doesn't scale to the same connection counts an
+event-loop or actor-based design would.</p>
+<p><code>try</code>/<code>catch</code> around <code>handleInner</code> converting exceptions into a <code>500</code>
+works because an uncaught exception propagating out of the code handling
+one connection would otherwise either crash that connection's thread
+(leaking the file descriptor / socket if the runtime doesn't clean it up)
+or, in HTTP server frameworks that don't guard this themselves, simply
+drop the connection with no response ever written to the socket — the
+client sees a bare connection reset rather than a real HTTP status line.
+Wrapping the handler is what guarantees <em>some</em> well-formed HTTP response
+always gets written, turning a JVM-level exception into an
+application-level status code instead of a protocol-level failure.</p>
 <h2 id="stretch-goals">Stretch goals<a class="headerlink" href="#stretch-goals" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Add <code>PUT /tasks/{id}</code> to mark a task done, and <code>DELETE /tasks/{id}</code> to

@@ -2120,6 +2120,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2318,6 +2329,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2466,6 +2488,41 @@ any type class machinery at all — this is Scala 3's replacement for Scala
 <a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
 <a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="n">println</span><span class="p">(</span><span class="nc">Point</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nc">Point</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">))</span><span class="w">   </span><span class="c1">// Point(4,6)</span>
 </code></pre></div>
+<h2 id="how-it-actually-works">How It Actually Works<a class="headerlink" href="#how-it-actually-works" title="Permanent link">&para;</a></h2>
+<p>Scala 3 <code>enum</code> compiles down to exactly the sealed-trait-plus-case-classes
+pattern from <a href="../../level-1/07-case-classes/">Level 1</a> and <a href="../../level-3/09-akka-actors-basics/">Level
+3</a> — <code>enum Color { case Red, Green,
+Blue }</code> is desugared by the compiler into a <code>sealed abstract class Color</code>
+plus one <code>case object</code> per simple case (or <code>case class</code> per
+parameterized case), with a synthesized companion holding a <code>values</code>
+array and a <code>valueOf</code>/<code>fromOrdinal</code> lookup. There's no new JVM-level enum
+mechanism involved (Scala enums are unrelated to <code>java.lang.Enum</code> unless
+you explicitly extend <code>java.lang.Enum</code> for Java interop) — <code>enum</code> is
+purely a more concise <em>surface syntax</em> over machinery that already
+existed.</p>
+<p><strong>Opaque types</strong> achieve genuinely zero runtime cost by being a
+compile-time-only fiction: <code>opaque type UserId = Int</code> tells the type
+checker to treat <code>UserId</code> as a distinct, incompatible type from <code>Int</code>
+everywhere outside the defining scope (catching accidental mixups at
+compile time), but after compilation, every <code>UserId</code> <em>is</em> just an <code>Int</code> in
+the bytecode — no wrapper object, no boxing, no allocation. This is the
+mechanical reason opaque types beat a <code>case class UserId(value: Int)</code>
+wrapper for this purpose: a case class wrapper is a real object at
+runtime, allocated on the heap (or occasionally stack-allocated/escape-
+analyzed away by the JIT, but not guaranteed), while an opaque type is
+erased to the underlying representation with certainty, by construction,
+at compile time.</p>
+<p><strong>Union types</strong> (<code>Int | String</code>) are also a compile-time-only construct
+resolved through erasure: the compiler tracks that a value could be
+either type and requires you to narrow it (typically via pattern
+matching or <code>isInstanceOf</code>) before using type-specific operations, but at
+the bytecode level a union type erases to their common
+runtime supertype (often <code>Object</code>/<code>Any</code>) plus compiler-inserted
+<code>instanceof</code> checks and casts wherever you narrow it — there's no runtime
+"union" object; the JVM only ever holds one concrete value at a time, and
+the union is the compiler's bookkeeping about which concrete types are
+possible at that point in the code, not a real tagged wrapper the way
+<code>Either</code>'s <code>Left</code>/<code>Right</code> are actual heap objects.</p>
 <h2 id="cheat-sheet">Cheat sheet<a class="headerlink" href="#cheat-sheet" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

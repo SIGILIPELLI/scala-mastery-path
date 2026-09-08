@@ -1559,6 +1559,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2284,6 +2295,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2429,6 +2451,36 @@ and keeps the mapping to an HTTP status in one place:</p>
 <a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="n">println</span><span class="p">(</span><span class="n">toResponse</span><span class="p">(</span><span class="nc">ApiResult</span><span class="p">.</span><span class="nc">Ok</span><span class="p">(</span><span class="s">&quot;&quot;&quot;{&quot;id&quot;:1}&quot;&quot;&quot;</span><span class="p">)))</span><span class="w">          </span><span class="c1">// (200,{&quot;id&quot;:1})</span>
 <a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="n">println</span><span class="p">(</span><span class="n">toResponse</span><span class="p">(</span><span class="nc">ApiResult</span><span class="p">.</span><span class="nc">NotFound</span><span class="p">(</span><span class="s">&quot;user&quot;</span><span class="p">)))</span><span class="w">            </span><span class="c1">// (404,{&quot;error&quot;:&quot;user not found&quot;})</span>
 </code></pre></div>
+<h2 id="how-it-actually-works">How It Actually Works<a class="headerlink" href="#how-it-actually-works" title="Permanent link">&para;</a></h2>
+<p>Underneath any Scala HTTP library sits the same primitive: a
+<code>java.net.ServerSocket</code> (or, in async servers, Java NIO's
+<code>ServerSocketChannel</code>) bound to a port, <code>accept()</code>-ing incoming TCP
+connections in a loop. Each accepted connection hands you a raw byte
+stream that the library parses according to the HTTP/1.1 text protocol —
+request line, headers, optional body — into the request object your
+handler function receives. "Routing by method and path" is nothing more
+than pattern matching (see <a href="../../level-1/08-pattern-matching-intro/">Level 1's pattern-matching
+module</a>) over the parsed
+<code>(method, path)</code> pair extracted from that request line; there's no
+special HTTP-routing bytecode, just ordinary <code>match</code> dispatch layered on
+top of string parsing.</p>
+<p>A "minimal HTTP server" handling one connection per accepted socket, if
+built the naive blocking way, spends one JVM thread per open connection —
+that thread sits blocked in a socket read until the client sends its next
+byte, which is why production frameworks either use a thread pool sized
+to expected concurrency or, more commonly today, an event-loop /
+non-blocking I/O model (Java NIO's selectors, or Akka HTTP's
+actor-and-Future-based pipeline built on the concurrency primitives from
+<a href="../01-futures-concurrency/">Module 1</a>) so thousands of idle connections
+don't each tie up a full OS thread.</p>
+<p>Returning a status code "as data" (an <code>Int</code> or enum you compute, rather
+than calling an imperative <code>.setStatus(200)</code> and returning <code>void</code>) works
+because the response is ultimately just bytes written to the same output
+stream in a specific text format (<code>HTTP/1.1 200 OK\r\n...</code>) — treating the
+status as a return value your handler produces, rather than a side effect
+it performs, is a design choice the library makes; the JVM-level mechanism
+underneath is the same either way: bytes serialized onto the socket's
+output stream in HTTP's specified order.</p>
 <h2 id="cheat-sheet">Cheat sheet<a class="headerlink" href="#cheat-sheet" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

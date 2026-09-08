@@ -980,6 +980,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2294,6 +2305,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cheat-sheet" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2428,6 +2450,33 @@ accumulate a result across branches:</p>
 <a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>
 <a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="n">println</span><span class="p">(</span><span class="n">parity</span><span class="p">)</span><span class="w">   </span><span class="c1">// odd</span>
 </code></pre></div>
+<h2 id="how-it-actually-works">How It Actually Works<a class="headerlink" href="#how-it-actually-works" title="Permanent link">&para;</a></h2>
+<p>A <code>match</code> expression doesn't compile to one uniform mechanism — the
+compiler picks the cheapest applicable strategy per pattern shape.
+Matching on simple literal <code>Int</code>s or <code>String</code>s (dense integer cases
+especially) compiles to the JVM's <code>tableswitch</code> or <code>lookupswitch</code>
+bytecode instruction — the same O(1) jump-table dispatch a Java <code>switch</code>
+compiles to, rather than a chain of <code>if</code>/<code>else if</code> comparisons. Matching
+on <em>type</em> (<code>case s: String =&gt; ...</code>) compiles to a sequence of
+<code>instanceof</code> checks (JVM <code>instanceof</code> bytecode) followed by a cast,
+evaluated top to bottom — which is exactly why pattern order matters and
+why an unreachable/overly-general earlier case can shadow a later one.</p>
+<p>Destructuring a case class (<code>case Point(x, y) =&gt; ...</code>) doesn't get special
+runtime support either — it compiles to a call to the case class's
+compiler-generated <code>unapply</code> method (see <a href="../07-case-classes/">Module 7</a>),
+which returns <code>Some((x, y))</code> on a structural match; the compiler then
+extracts the tuple's fields into the bound names <code>x</code> and <code>y</code>. For a
+non-case class, you get the same pattern-matching syntax only if you
+hand-write a matching <code>unapply</code> in its companion object — the language
+feature is really "call <code>unapply</code> and destructure what it returns," not
+anything intrinsically about case classes.</p>
+<p>Every <code>match</code> also gets a <code>scala.MatchError</code> thrown if no case applies and
+there's no wildcard <code>_</code> — the compiler inserts this fallback automatically,
+which is why exhaustiveness checking on <code>sealed</code> hierarchies (covered in
+<a href="../09-traits-basics/">Module 9</a> and <a href="../../level-2/02-pattern-matching-advanced/">Level 2's advanced pattern
+matching</a>) matters: it lets the
+compiler prove at compile time that this runtime fallback can never
+actually trigger.</p>
 <h2 id="cheat-sheet">Cheat sheet<a class="headerlink" href="#cheat-sheet" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

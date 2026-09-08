@@ -963,6 +963,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#exercise" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2305,6 +2316,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-it-actually-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Actually Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#exercise" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2455,6 +2477,42 @@ enum-style tag — use <code>case object</code> instead:</p>
 <p>(<code>sealed trait</code> is previewed here and covered properly in
 <a href="../09-traits-basics/">Module 9</a>; Scala 3's <code>enum</code> — often a cleaner fit for
 this exact pattern — appears in <a href="../../level-4/08-scala-3-features/">Level 4</a>.)</p>
+<h2 id="how-it-actually-works">How It Actually Works<a class="headerlink" href="#how-it-actually-works" title="Permanent link">&para;</a></h2>
+<p>When the compiler sees <code>case class Point(x: Double, y: Double)</code>, it
+mechanically synthesizes an entire set of members on top of what an
+ordinary <code>class</code> would generate — nothing here is a runtime trick, it all
+happens at compile time as extra bytecode:</p>
+<ul>
+<li><strong><code>equals</code>/<code>hashCode</code></strong> — generated to compare every constructor
+  parameter field-by-field (<code>equals</code>) and combine every field's hash code
+  via <code>MurmurHash3</code> (<code>hashCode</code>), rather than the default <code>Object.equals</code>
+  (reference identity) and <code>Object.hashCode</code> (identity hash) that a plain
+  <code>class</code> inherits from <code>java.lang.Object</code>. This is exactly why
+  <code>cp1 == cp2</code> is <code>true</code> for two separately-constructed <code>CasePoint(1, 2)</code>
+  values but <code>rp1 == rp2</code> is <code>false</code> for <code>RegularPoint</code> — <code>==</code> in Scala
+  calls <code>equals</code>, and only the case class overrides it.</li>
+<li><strong><code>toString</code></strong> — generated to print the class name and each field in
+  order, e.g. <code>"Point(" + x + "," + y + ")"</code>.</li>
+<li><strong>A companion <code>object</code> with <code>apply</code>/<code>unapply</code></strong> — <code>apply</code> is the factory
+  method that makes <code>Point(3.0, 4.0)</code> work without <code>new</code> (see <a href="../06-classes-objects/">Module
+  6</a>); <code>unapply</code> is what makes the case class usable
+  in pattern matching (<code>case Point(x, y) =&gt; ...</code>) — it takes an instance and
+  returns its fields as an <code>Option</code> of a tuple, which the compiler calls
+  behind the scenes every time a <code>match</code> tries this pattern.</li>
+<li><strong><code>copy</code></strong> — generated as a method with one named, defaulted parameter
+  per field, each parameter defaulting to <code>this.&lt;field&gt;</code>. <code>alice.copy(title
+  = "Senior Engineer")</code> compiles to a call passing your new value for
+  <code>title</code> and letting every other parameter fall back to its default,
+  which is simply reading the corresponding field off <code>alice</code> — so <code>copy</code>
+  is really just a constructor call with smart defaults, not special
+  language machinery.</li>
+</ul>
+<p><code>case object</code> skips the <code>apply</code>/<code>copy</code>/constructor-parameter generation
+entirely (there's nothing to construct or copy) but still gets <code>toString</code>
+and reference-based <code>equals</code>/<code>hashCode</code> inherited from being a singleton —
+which is fine, since two <code>case object</code>s of the same type are always the
+same instance (see <a href="../06-classes-objects/">Module 6</a> on how <code>object</code>
+compiles to a single <code>MODULE$</code> instance).</p>
 <h2 id="exercise">Exercise<a class="headerlink" href="#exercise" title="Permanent link">&para;</a></h2>
 <p>Define <code>case class Book(title: String, author: String, year: Int, read: Boolean = false)</code>.
 Create a <code>List[Book]</code> of at least four books, at least two marked <code>read = true</code>.
