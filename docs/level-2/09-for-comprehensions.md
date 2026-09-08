@@ -163,6 +163,10 @@ type-mismatch error, the first thing to check is whether every generator
 really is the same kind of container — the error message rarely says that
 directly.
 
+## How It Actually Works
+
+The compiler literally rewrites your `for` block before it ever reaches type-checking: each `x <- xs` becomes a `flatMap` (except the last generator, which becomes `map`), each `if` guard becomes a `withFilter` call, and `yield` supplies the function body — so a `for` over `Option`, `List`, or `Future` all "just work" because each of those types independently implements `map`/`flatMap`/`withFilter` with its own semantics (an `Option`'s `flatMap` short-circuits on `None`, a `Future`'s runs the next step on a different thread once the prior one completes). Short-circuiting isn't special-cased into `for` at all — it falls straight out of how each container's own `flatMap` decides whether to call the function you pass it.
+
 ## Cheat sheet
 
 | `for` syntax | Desugars to |

@@ -152,6 +152,10 @@ def sign(n: Int): String = n match
 Always give a guard chain a final unguarded `case _ =>`, exactly as you
 would for matching on an open (non-sealed) type.
 
+## How It Actually Works
+
+`match` compiles to a decision tree, not a chain of `if`/`else` — the compiler analyzes your patterns' structure (type tags, `case class` field arity, sealed hierarchy membership) and can generate a jump table or nested type-tests, which is why matching is often *faster* than the equivalent hand-written conditionals. An extractor's `unapply` is called directly by the generated match code: `case Some(x) =>` literally compiles to a call to `Option`'s `unapply`, which returns a value the compiler treats as present-or-absent (historically `Option[T]`, now often a `Boolean`+accessor pair for performance) — there's no reflection involved, it's a plain static method call resolved at compile time. Exhaustiveness checking works by the compiler statically enumerating every subtype of a `sealed` trait at compile time, which is exactly why it silently stops protecting you the moment you add a `case _ if condition =>` guard: the compiler can prove all *cases* are covered, but it can't prove all *values* satisfy your guard, so it has to assume they might not.
+
 ## Cheat sheet
 
 | Pattern | What it needs | Binds |

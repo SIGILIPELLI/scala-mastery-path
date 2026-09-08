@@ -156,6 +156,10 @@ exactly how [Module 7 · Working with JSON](07-working-with-json.md)'s
 encoders/decoders work under the hood. [Level 3](../level-3/06-type-classes.md)
 covers type classes properly, including writing your own generic ones.
 
+## How It Actually Works
+
+When the compiler sees a `using` parameter it can't find at the call site, it doesn't fail immediately — it searches an implicit scope built from the local scope outward, then the companion objects of every type involved in the parameter's type signature, collecting every `given` that type-checks as a candidate. If more than one candidate matches, specificity rules (a `given` in a narrower scope, or one whose type is a subtype of another candidate's) decide the winner at *compile* time — there's no runtime lookup at all, the compiler bakes in a direct reference to the winning value, which is why an ambiguous-implicit error is a compile failure, not a runtime one. Extension methods work by the same resolution mechanism: `obj.method()` where `method` isn't defined on `obj`'s type triggers the compiler to search for an extension whose receiver type matches, then rewrites the call as if you'd written the extension's defining function directly.
+
 ## Cheat sheet
 
 | Scala 3 keyword | Old (Scala 2) name | Purpose |
