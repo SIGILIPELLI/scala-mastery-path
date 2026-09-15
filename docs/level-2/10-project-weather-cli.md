@@ -1,3 +1,7 @@
+---
+description: "Project — Weather CLI — A command-line app that looks up a city, fetches its current weather from a real public API, and prints a short report — combining…"
+---
+
 # 10 · Project — Weather CLI
 
 A command-line app that looks up a city, fetches its current weather from a

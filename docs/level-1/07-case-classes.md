@@ -1,3 +1,7 @@
+---
+description: "Case Classes — Compare that to what an ordinary class requires to get the same behavior: you'd have to hand-write toString, equals, and hashCode yourself.…"
+---
+
 # 07 · Case Classes
 
 ## What a case class gives you for free
@@ -158,6 +162,12 @@ and reference-based `equals`/`hashCode` inherited from being a singleton —
 which is fine, since two `case object`s of the same type are always the
 same instance (see [Module 6](06-classes-objects.md) on how `object`
 compiles to a single `MODULE$` instance).
+
+## 🔀 See this in another language
+
+- [Dart — Null Safety Basics](https://sigilipelli.github.io/dart-mastery-path/level-1/07-null-safety-basics/)
+- [Python — File I/O Basics](https://sigilipelli.github.io/python-mastery-path/level-1/07-file-io/)
+- [C# — Exception Handling](https://sigilipelli.github.io/csharp-mastery-path/level-1/07-exception-handling/)
 
 ## Exercise
 

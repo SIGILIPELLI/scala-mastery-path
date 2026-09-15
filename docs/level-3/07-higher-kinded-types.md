@@ -1,3 +1,7 @@
+---
+description: "Higher-Kinded Types Intro — You've already written F[_] several times — in the Functor[F[_]] type class from module 04 and the generic printAll[A: Show]…"
+---
+
 # 07 · Higher-Kinded Types Intro
 
 You've already written `F[_]` several times — in the `Functor[F[_]]` type

@@ -1,3 +1,7 @@
+---
+description: "Databases — Scala talks to relational databases the same way Java does: JDBC. Higher-level libraries like Slick or Doobie wrap JDBC in functional…"
+---
+
 # 03 · Databases
 
 Scala talks to relational databases the same way Java does: JDBC. Higher-level

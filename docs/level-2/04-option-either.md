@@ -1,3 +1,7 @@
+---
+description: "Option/Either for Error Handling — You've already seen Option in passing — the Level 1 project used it to represent a line that might fail to parse. This…"
+---
+
 # 04 · Option/Either for Error Handling
 
 You've already seen `Option` in passing — the

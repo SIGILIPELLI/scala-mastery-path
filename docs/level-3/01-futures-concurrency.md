@@ -1,3 +1,7 @@
+---
+description: "Futures & Concurrency — Everything so far has run on one thread, one step after another. Real services need to do several things at once — call a database…"
+---
+
 # 01 · Futures & Concurrency
 
 Everything so far has run on one thread, one step after another. Real

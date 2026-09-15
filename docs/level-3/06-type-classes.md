@@ -1,3 +1,7 @@
+---
+description: "Type Classes — Monoid and Functor from the previous module are both examples of a broader design pattern called a type class: define a trait describing a…"
+---
+
 # 06 · Type Classes
 
 `Monoid` and `Functor` from the previous module are both examples of a

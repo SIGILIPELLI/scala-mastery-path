@@ -1,3 +1,7 @@
+---
+description: "Implicits Basics — 'Implicits' is Scala's long-standing name for values and conversions the compiler can supply automatically, without you writing them…"
+---
+
 # 06 · Implicits Basics
 
 "Implicits" is Scala's long-standing name for values and conversions the

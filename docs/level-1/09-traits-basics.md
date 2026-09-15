@@ -1,3 +1,7 @@
+---
+description: "Traits Basics — A trait defines a contract — behavior and/or state that a class can mix in. It's similar to a Java interface, but richer: traits can hold…"
+---
+
 # 09 · Traits Basics
 
 ## What a trait is
@@ -186,6 +190,12 @@ a runtime `MatchError`.
 | `class Bar extends Foo with Baz` | `Bar` mixes in both `Foo` and `Baz` |
 | `sealed trait Foo` | All subtypes must be declared in this file — enables exhaustive `match` |
 | `override def x = ...` | Provide/replace a member from a parent trait or class |
+
+## 🔀 See this in another language
+
+- [Dart — Packages (pub, pubspec.yaml)](https://sigilipelli.github.io/dart-mastery-path/level-1/09-packages/)
+- [Python — Modules, Packages & pip](https://sigilipelli.github.io/python-mastery-path/level-1/09-modules-packages/)
+- [C# — File I/O & Working with Text](https://sigilipelli.github.io/csharp-mastery-path/level-1/09-file-io/)
 
 ## Exercise
 

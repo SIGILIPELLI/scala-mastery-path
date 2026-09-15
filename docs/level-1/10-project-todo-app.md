@@ -1,3 +1,7 @@
+---
+description: "Project — CLI To-Do App — A small end-to-end project combining everything from Level 1: val/var, control flow, functions, collections, case classes…"
+---
+
 # 10 · Project — CLI To-Do App
 
 A small end-to-end project combining everything from Level 1: `val`/`var`,
@@ -225,3 +229,9 @@ threaded through, which is why command-line arguments arrive as a plain
 `Array[String]` rather than anything Scala-specific.
 
 Completing this project means you're ready for **Level 2 · Intermediate**.
+
+## 🔀 See this in another language
+
+- [Dart — Project — CLI To-Do App](https://sigilipelli.github.io/dart-mastery-path/level-1/10-project-todo-cli/)
+- [Python — Project — CLI To-Do App](https://sigilipelli.github.io/python-mastery-path/level-1/10-project-todo-app/)
+- [C# — Project — Console Task Manager App](https://sigilipelli.github.io/csharp-mastery-path/level-1/10-project-task-manager/)

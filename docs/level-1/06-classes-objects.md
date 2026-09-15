@@ -1,3 +1,7 @@
+---
+description: "Classes & Objects Basics — val ada = Person('Ada', 28) println(ada.name) // Ada println(ada.greet()) // Hi, I'm Ada and I'm 28 years old."
+---
+
 # 06 · Classes & Objects Basics
 
 ## Defining a class
@@ -160,6 +164,12 @@ indexing into a `List`.
 | Companion object | `object Foo` next to `class Foo` | Factory methods, constants tied to the class |
 | `apply` | `def apply(...) = ...` | Lets `Foo(...)` work without `new` |
 | `private` | `private val x = ...` | Restricts visibility to the class (+ companion) |
+
+## 🔀 See this in another language
+
+- [Dart — Classes & Objects Basics](https://sigilipelli.github.io/dart-mastery-path/level-1/06-classes-objects/)
+- [Python — Strings & Formatting](https://sigilipelli.github.io/python-mastery-path/level-1/06-strings-formatting/)
+- [C# — Collections](https://sigilipelli.github.io/csharp-mastery-path/level-1/06-collections/)
 
 ## Exercise
 

@@ -1,3 +1,7 @@
+---
+description: "Security Best Practices — Two problems show up in almost every production service: proving a user is who they claim to be (authentication) and proving a…"
+---
+
 # 04 · Security Best Practices
 
 Two problems show up in almost every production service: proving a user is

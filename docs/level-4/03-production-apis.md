@@ -1,3 +1,7 @@
+---
+description: "Production APIs — Level 3's REST API project made something that works. This module hardens it toward something you'd actually run in production: a…"
+---
+
 # 03 · Production APIs
 
 Level 3's REST API project made something that works. This module hardens

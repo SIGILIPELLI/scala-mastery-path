@@ -1,3 +1,7 @@
+---
+description: "Working with JSON — write serializes any type with a ReadWriter in scope to a JSON string; read[T] parses a JSON string back into T, given the exact type…"
+---
+
 # 07 · Working with JSON
 
 The [Level 1 project](../level-1/10-project-todo-app.md) stored tasks in a

@@ -1,3 +1,7 @@
+---
+description: "Testing with ScalaTest — Every function you've written so far has been 'tested' by eyeballing println output — fine for a lesson, unworkable for a real…"
+---
+
 # 05 · Testing with ScalaTest
 
 Every function you've written so far has been "tested" by eyeballing

@@ -1,3 +1,7 @@
+---
+description: "Advanced Functional Programming — Level 3 built type classes and monoids by hand (Show, Monoid, Functor). Cats is the library that provides battle-tested…"
+---
+
 # 01 · Advanced Functional Programming
 
 Level 3 built type classes and monoids by hand (`Show`, `Monoid`,

@@ -1,3 +1,7 @@
+---
+description: "Capstone Project — This capstone combines nearly everything from Levels 3 and 4 into one service: a task-tracking API with real user accounts. It uses…"
+---
+
 # 10 · Capstone Project
 
 This capstone combines nearly everything from Levels 3 and 4 into one

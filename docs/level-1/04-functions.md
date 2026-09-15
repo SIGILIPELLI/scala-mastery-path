@@ -1,3 +1,7 @@
+---
+description: "Functions — In Scala, functions are values just like Int or String — you can store them in a val, pass them as arguments, and return them from other…"
+---
+
 # 04 · Functions
 
 ## Defining functions with `def`
@@ -153,6 +157,12 @@ happens after the recursive call returns) at compile time instead of as a
 | `val f: Int => Int = n => n * 2` | Function value with an explicit function type |
 | `_ * 2` | Placeholder syntax for a simple one-argument lambda |
 | `@tailrec` | Compiler-checked tail-call optimization |
+
+## 🔀 See this in another language
+
+- [Dart — Functions](https://sigilipelli.github.io/dart-mastery-path/level-1/04-functions/)
+- [Python — Functions & Scope](https://sigilipelli.github.io/python-mastery-path/level-1/04-functions-scope/)
+- [C# — Methods & Functions](https://sigilipelli.github.io/csharp-mastery-path/level-1/04-methods-functions/)
 
 ## Exercise
 

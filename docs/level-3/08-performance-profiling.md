@@ -1,3 +1,7 @@
+---
+description: "Performance & Profiling — Correct code isn't always fast code, and guessing where the slow part is usually wrong. This module covers measuring performance…"
+---
+
 # 08 · Performance & Profiling
 
 Correct code isn't always fast code, and guessing where the slow part is

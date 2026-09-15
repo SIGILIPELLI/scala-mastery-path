@@ -1,3 +1,7 @@
+---
+description: "Pattern Matching Intro — match is exhaustiveness-friendly and generally preferred over long if/else if chains once you have more than two or three…"
+---
+
 # 08 · Pattern Matching Intro
 
 ## Basic `match`
@@ -159,6 +163,12 @@ actually trigger.
 | `case (a, b) =>` | A 2-tuple, binding both elements |
 | `case x if cond =>` | Adds a guard condition after the shape matches |
 | `case _ =>` | Matches anything (catch-all) |
+
+## 🔀 See this in another language
+
+- [Dart — Async Basics](https://sigilipelli.github.io/dart-mastery-path/level-1/08-async-basics/)
+- [Python — Error Handling Basics](https://sigilipelli.github.io/python-mastery-path/level-1/08-error-handling/)
+- [C# — LINQ Basics](https://sigilipelli.github.io/csharp-mastery-path/level-1/08-linq-basics/)
 
 ## Exercise
 

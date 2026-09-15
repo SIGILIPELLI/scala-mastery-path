@@ -1,3 +1,7 @@
+---
+description: "Collections Basics — Scala's standard library ships a rich set of immutable-by-default collections. This module covers the three you'll use constantly…"
+---
+
 # 05 · Collections Basics
 
 Scala's standard library ships a rich set of immutable-by-default
@@ -149,6 +153,12 @@ than any special tuple machinery.
 | `Map[K, V]` | No (by default) | Unique keys | `apply`, `getOrElse`, `get`, `+`, `-` |
 | `Set[A]` | No | No | `contains`, `+`, `-`, `union`, `intersect`, `diff` |
 | `(A, B)` tuple | fixed arity | — | `._1`, `._2`, destructuring |
+
+## 🔀 See this in another language
+
+- [Dart — Collections (List, Map, Set)](https://sigilipelli.github.io/dart-mastery-path/level-1/05-collections/)
+- [Python — Core Data Structures](https://sigilipelli.github.io/python-mastery-path/level-1/05-data-structures/)
+- [C# — Classes & Objects](https://sigilipelli.github.io/csharp-mastery-path/level-1/05-classes-objects/)
 
 ## Exercise
 

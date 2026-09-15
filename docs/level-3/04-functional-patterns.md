@@ -1,3 +1,7 @@
+---
+description: "Functional Programming Patterns — You've been using map, flatMap, and for-comprehensions since Level 1 on List, Option, and Either. This module names the…"
+---
+
 # 04 · Functional Programming Patterns
 
 You've been using `map`, `flatMap`, and `for`-comprehensions since Level 1

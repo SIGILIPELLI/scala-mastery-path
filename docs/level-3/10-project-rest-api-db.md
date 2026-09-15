@@ -1,3 +1,7 @@
+---
+description: "Project — REST API + Database Service — This project combines everything from Level 3: an HTTP server (module 02), a real database via JDBC (module 03)…"
+---
+
 # 10 · Project — REST API + Database Service
 
 This project combines everything from Level 3: an HTTP server (module 02),

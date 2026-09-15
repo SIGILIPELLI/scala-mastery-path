@@ -1,3 +1,7 @@
+---
+description: "sbt Deep Dive — Every project so far has used a single-project build.sbt with one or two settings. This module covers the sbt features you'll actually…"
+---
+
 # 08 · sbt Deep Dive
 
 Every project so far has used a single-project `build.sbt` with one or two

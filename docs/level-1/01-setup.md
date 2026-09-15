@@ -1,3 +1,7 @@
+---
+description: "Setup & First Program — Most Scala installations (via sbt, Coursier, or an IDE) also give you the scala command for running the REPL and scripts directly."
+---
+
 # 01 · Setup & First Program
 
 ## Install the JDK and sbt
@@ -165,6 +169,12 @@ why Scala interoperates so smoothly with Java libraries: after compilation
 there's no meaningful difference between a `.class` file that came from
 `.scala` source and one that came from `.java` source — the JVM only sees
 bytecode.
+
+## 🔀 See this in another language
+
+- [Dart — Setup & First Program](https://sigilipelli.github.io/dart-mastery-path/level-1/01-setup/)
+- [Python — Setup & First Program](https://sigilipelli.github.io/python-mastery-path/level-1/01-setup/)
+- [C# — What Is C# & .NET?](https://sigilipelli.github.io/csharp-mastery-path/level-1/01-what-is-csharp-dotnet/)
 
 ## Exercise
 

@@ -1,3 +1,7 @@
+---
+description: "Testing Advanced — Level 2 covered writing individual example-based tests with ScalaTest. This module adds two techniques for when hand-picked examples…"
+---
+
 # 05 · Testing Advanced
 
 [Level 2](../level-2/05-scalatest-testing.md) covered writing individual

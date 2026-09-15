@@ -1,3 +1,7 @@
+---
+description: "Akka Actors Basics — An actor has: a mailbox (a queue of incoming messages), a behavior (what to do with the next message), and the ability to send…"
+---
+
 # 09 · Akka Actors Basics
 
 `Future` (module 01) models one asynchronous value. **Akka actors** model

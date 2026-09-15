@@ -1,3 +1,7 @@
+---
+description: "Scala 3 Features — You've used given/using (Level 2, formalized in Level 3's type classes), enum for ADTs, and extension methods throughout this course…"
+---
+
 # 08 · Scala 3 Features
 
 You've used `given`/`using` (Level 2, formalized in Level 3's type

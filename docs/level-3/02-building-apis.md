@@ -1,3 +1,7 @@
+---
+description: "Building APIs — Real Scala services usually expose HTTP endpoints, typically with a library like http4s or akka-http built on top of Future/effect types.…"
+---
+
 # 02 · Building APIs
 
 Real Scala services usually expose HTTP endpoints, typically with a library

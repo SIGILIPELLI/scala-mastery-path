@@ -1,3 +1,7 @@
+---
+description: "OOP Deep Dive — Level 1 introduced traits as mixable contracts and gave you a first taste of stacking traits with super. This module goes deeper into what…"
+---
+
 # 01 · OOP Deep Dive
 
 [Level 1](../level-1/09-traits-basics.md) introduced traits as mixable

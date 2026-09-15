@@ -1,3 +1,7 @@
+---
+description: "Control Flow — Because if/else is an expression, both branches must produce compatible types (or Scala widens to a common supertype) for the result to be…"
+---
+
 # 03 · Control Flow
 
 ## `if`/`else` is an expression
@@ -156,6 +160,12 @@ even though `for` and `foreach` read better.
 | `for i <- range do ...` | Loop over a collection for side effects |
 | `for i <- range yield ...` | Build a new collection from a loop |
 | `x match { case ... }` | Multi-way branching on a value's shape |
+
+## 🔀 See this in another language
+
+- [Dart — Control Flow](https://sigilipelli.github.io/dart-mastery-path/level-1/03-control-flow/)
+- [Python — Control Flow](https://sigilipelli.github.io/python-mastery-path/level-1/03-control-flow/)
+- [C# — Control Flow](https://sigilipelli.github.io/csharp-mastery-path/level-1/03-control-flow/)
 
 ## Exercise
 

@@ -1,3 +1,7 @@
+---
+description: "Pattern Matching Advanced — Level 1 covered matching on literals, types, case classes, lists and tuples. This module explains how case Point(x, y) =>…"
+---
+
 # 02 · Pattern Matching Advanced
 
 [Level 1](../level-1/08-pattern-matching-intro.md) covered matching on

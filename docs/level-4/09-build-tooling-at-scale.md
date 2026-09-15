@@ -1,3 +1,7 @@
+---
+description: "Build Tooling at Scale — Every project so far has been one build.sbt and one source tree. A large codebase usually splits into multiple modules …"
+---
+
 # 09 · Build Tooling at Scale
 
 Every project so far has been one `build.sbt` and one source tree. A large

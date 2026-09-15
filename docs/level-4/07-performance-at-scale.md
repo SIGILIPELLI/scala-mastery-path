@@ -1,3 +1,7 @@
+---
+description: "Performance at Scale — Level 3's performance module measured single-threaded code. Production services live or die on throughput under concurrent load …"
+---
+
 # 07 · Performance at Scale
 
 [Level 3's performance module](../level-3/08-performance-profiling.md)

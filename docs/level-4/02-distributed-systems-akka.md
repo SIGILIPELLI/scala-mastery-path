@@ -1,3 +1,7 @@
+---
+description: "Distributed Systems with Akka — Level 3's actors all lived inside one ActorSystem in one JVM. Akka Cluster extends the same actor model across multiple…"
+---
+
 # 02 · Distributed Systems with Akka
 
 Level 3's actors all lived inside one `ActorSystem` in one JVM. **Akka

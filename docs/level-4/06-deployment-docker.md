@@ -1,3 +1,7 @@
+---
+description: "Deployment (Docker) — A Scala service needs a JVM to run, plus every dependency it links against — Docker packages both into one image so 'works on my…"
+---
+
 # 06 · Deployment (Docker)
 
 A Scala service needs a JVM to run, plus every dependency it links against

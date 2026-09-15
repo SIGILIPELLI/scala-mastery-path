@@ -1,3 +1,7 @@
+---
+description: "For-Comprehensions — You've used for x <- list do ... for a plain loop since Level 1, and Module 4 used for-comprehensions to chain Option/Either…"
+---
+
 # 09 · For-Comprehensions
 
 You've used `for x <- list do ...` for a plain loop since Level 1, and

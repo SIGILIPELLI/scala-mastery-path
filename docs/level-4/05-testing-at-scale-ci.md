@@ -1,3 +1,7 @@
+---
+description: "Testing at Scale & CI — A handful of test files (Level 2, Level 3) run fast enough that nobody thinks about how they run. A codebase with thousands of…"
+---
+
 # 05 · Testing at Scale & CI
 
 A handful of test files ([Level 2](../level-2/05-scalatest-testing.md),

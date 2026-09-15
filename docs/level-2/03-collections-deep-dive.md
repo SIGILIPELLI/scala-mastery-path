@@ -1,3 +1,7 @@
+---
+description: "Collections Deep Dive — Level 1 introduced List, map, and filter as everyday tools. This module goes deeper into the fold/reduce family (and where each…"
+---
+
 # 03 · Collections Deep Dive
 
 [Level 1](../level-1/05-collections-basics.md) introduced `List`, `map`, and

@@ -1,3 +1,7 @@
+---
+description: "Variables & Types — Idiomatic Scala strongly favors val. Immutability makes code easier to reason about — a val bound to a value never changes underneath…"
+---
+
 # 02 · Variables & Types
 
 ## `val` vs `var`
@@ -159,6 +163,12 @@ string concatenation with extra syntax: `s"${a} + ${b} = ${a + b}"` is
 rewritten by the compiler into a call to `StringContext(...).s(a, b, a + b)`,
 which under the hood builds the result with a `StringBuilder` — the same
 mechanism you'd get from manual `+` concatenation, just generated for you.
+
+## 🔀 See this in another language
+
+- [Dart — Variables & Types](https://sigilipelli.github.io/dart-mastery-path/level-1/02-variables-types/)
+- [Python — Variables, Data Types & Operators](https://sigilipelli.github.io/python-mastery-path/level-1/02-variables-data-types/)
+- [C# — Variables & Types](https://sigilipelli.github.io/csharp-mastery-path/level-1/02-variables-types/)
 
 ## Exercise
 
