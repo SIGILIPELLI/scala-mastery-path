@@ -187,3 +187,9 @@ when it has no bearing on the actual build output — a stray `target/` or
   (`docker build -t scala-demo .`), run it with `docker run -p 8080:8080 -e
   PORT=8080 scala-demo`, and compare the final image size against a
   single-stage build that ships the full sbt/Scala toolchain.
+
+## 🔀 See this in another language
+
+- [TypeScript — 06 · Deployment with Docker](https://sigilipelli.github.io/typescript-mastery-path/level-4/06-deployment-docker/)
+- [C# — 07 · Deployment (Docker for .NET)](https://sigilipelli.github.io/csharp-mastery-path/level-4/07-deployment-docker/)
+- [Go — 06 · Deployment with Docker](https://sigilipelli.github.io/go-mastery-path/level-4/06-deployment-docker/)

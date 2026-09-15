@@ -205,3 +205,9 @@ application-level status code instead of a protocol-level failure.
 - Add a `HikariCP` connection pool in front of `DriverManager.getConnection`
   and compare behavior under several concurrent clients hitting the server
   at once with a simple loop of `HttpClient` calls from multiple threads.
+
+## 🔀 See this in another language
+
+- [Java — 11 · Project — REST API + Database CRUD Service](https://sigilipelli.github.io/java-mastery-path/level-3/11-project-rest-api-db/)
+- [Swift — 10 · Project — REST API + Database Service](https://sigilipelli.github.io/swift-mastery-path/level-3/10-project-rest-api-db/)
+- [Kotlin — 10 · Project — REST API + Database Service](https://sigilipelli.github.io/kotlin-mastery-path/level-3/10-project-rest-api-db/)

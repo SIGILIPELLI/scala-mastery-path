@@ -156,6 +156,10 @@ just with an extra routing hop through the shard region actor.
 | React to membership changes | subscribe to cluster events, don't poll |
 | Distribute many stateful actors across nodes | Cluster Sharding (built on the mechanism above) |
 
+## 🔀 See this in another language
+
+- [C# — 03 · Distributed Systems Basics for .NET](https://sigilipelli.github.io/csharp-mastery-path/level-4/03-distributed-systems-basics/)
+
 ## Exercise
 
 Configure a second `application.conf` profile (or pass `-Dakka.remote.artery.canonical.port=25252`

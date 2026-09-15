@@ -187,6 +187,12 @@ as a fallback when no case class fits the shape.
 | Navigate a generic tree | `.obj`, `.arr`, `.str`, `.num`, `.bool`, `parsed("key")` |
 | Handle parse failure as data | `Try(read[Foo](s)).toEither` |
 
+## 🔀 See this in another language
+
+- [JavaScript — 05 · Working with JSON & Fetch API](https://sigilipelli.github.io/javascript-mastery-path/level-2/05-json-fetch/)
+- [TypeScript — 08 · Working with JSON/APIs](https://sigilipelli.github.io/typescript-mastery-path/level-2/08-working-with-json-apis/)
+- [C# — 07 · Working with JSON (System.Text.Json)](https://sigilipelli.github.io/csharp-mastery-path/level-2/07-json-system-text-json/)
+
 ## Exercise
 
 Define `case class Book(title: String, author: String, year: Int, tags: List[String]) derives ReadWriter`.

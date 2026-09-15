@@ -222,6 +222,12 @@ propagates untouched to the end, same as `None`.
 | Drop `None`s from a `List[Option[A]]` | `.flatten` |
 | Run code that might throw, capture the exception | `Try(...)` |
 
+## 🔀 See this in another language
+
+- [JavaScript — 07 · Error Handling Advanced](https://sigilipelli.github.io/javascript-mastery-path/level-2/07-error-handling-advanced/)
+- [C — 06 · Error Handling Conventions](https://sigilipelli.github.io/c-mastery-path/level-2/06-error-handling/)
+- [C++ — 08 · Error Handling with Exceptions](https://sigilipelli.github.io/cpp-mastery-path/level-2/08-error-handling-exceptions/)
+
 ## Exercise
 
 Write `def parsePositiveEven(s: String): Either[String, Int]` that parses a
