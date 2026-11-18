@@ -156,9 +156,9 @@ than any special tuple machinery.
 
 ## 🔀 See this in another language
 
-- [Dart — Collections (List, Map, Set)](https://sigilipelli.github.io/dart-mastery-path/level-1/05-collections/)
-- [Python — Core Data Structures](https://sigilipelli.github.io/python-mastery-path/level-1/05-data-structures/)
-- [C# — Classes & Objects](https://sigilipelli.github.io/csharp-mastery-path/level-1/05-classes-objects/)
+- [Dart — Collections (List, Map, Set)](https://learnmasterypath.com/dart-mastery-path/level-1/05-collections/)
+- [Python — Core Data Structures](https://learnmasterypath.com/python-mastery-path/level-1/05-data-structures/)
+- [C# — Classes & Objects](https://learnmasterypath.com/csharp-mastery-path/level-1/05-classes-objects/)
 
 ## Exercise
 

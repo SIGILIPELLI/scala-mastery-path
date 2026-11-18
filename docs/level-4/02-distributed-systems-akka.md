@@ -158,7 +158,7 @@ just with an extra routing hop through the shard region actor.
 
 ## 🔀 See this in another language
 
-- [C# — 03 · Distributed Systems Basics for .NET](https://sigilipelli.github.io/csharp-mastery-path/level-4/03-distributed-systems-basics/)
+- [C# — 03 · Distributed Systems Basics for .NET](https://learnmasterypath.com/csharp-mastery-path/level-4/03-distributed-systems-basics/)
 
 ## Exercise
 

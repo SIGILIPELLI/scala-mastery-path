@@ -166,9 +166,9 @@ mechanism you'd get from manual `+` concatenation, just generated for you.
 
 ## 🔀 See this in another language
 
-- [Dart — Variables & Types](https://sigilipelli.github.io/dart-mastery-path/level-1/02-variables-types/)
-- [Python — Variables, Data Types & Operators](https://sigilipelli.github.io/python-mastery-path/level-1/02-variables-data-types/)
-- [C# — Variables & Types](https://sigilipelli.github.io/csharp-mastery-path/level-1/02-variables-types/)
+- [Dart — Variables & Types](https://learnmasterypath.com/dart-mastery-path/level-1/02-variables-types/)
+- [Python — Variables, Data Types & Operators](https://learnmasterypath.com/python-mastery-path/level-1/02-variables-data-types/)
+- [C# — Variables & Types](https://learnmasterypath.com/csharp-mastery-path/level-1/02-variables-types/)
 
 ## Exercise
 

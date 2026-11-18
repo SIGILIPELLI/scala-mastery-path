@@ -232,6 +232,6 @@ Completing this project means you're ready for **Level 2 · Intermediate**.
 
 ## 🔀 See this in another language
 
-- [Dart — Project — CLI To-Do App](https://sigilipelli.github.io/dart-mastery-path/level-1/10-project-todo-cli/)
-- [Python — Project — CLI To-Do App](https://sigilipelli.github.io/python-mastery-path/level-1/10-project-todo-app/)
-- [C# — Project — Console Task Manager App](https://sigilipelli.github.io/csharp-mastery-path/level-1/10-project-task-manager/)
+- [Dart — Project — CLI To-Do App](https://learnmasterypath.com/dart-mastery-path/level-1/10-project-todo-cli/)
+- [Python — Project — CLI To-Do App](https://learnmasterypath.com/python-mastery-path/level-1/10-project-todo-app/)
+- [C# — Project — Console Task Manager App](https://learnmasterypath.com/csharp-mastery-path/level-1/10-project-task-manager/)

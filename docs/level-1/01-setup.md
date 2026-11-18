@@ -172,9 +172,9 @@ bytecode.
 
 ## 🔀 See this in another language
 
-- [Dart — Setup & First Program](https://sigilipelli.github.io/dart-mastery-path/level-1/01-setup/)
-- [Python — Setup & First Program](https://sigilipelli.github.io/python-mastery-path/level-1/01-setup/)
-- [C# — What Is C# & .NET?](https://sigilipelli.github.io/csharp-mastery-path/level-1/01-what-is-csharp-dotnet/)
+- [Dart — Setup & First Program](https://learnmasterypath.com/dart-mastery-path/level-1/01-setup/)
+- [Python — Setup & First Program](https://learnmasterypath.com/python-mastery-path/level-1/01-setup/)
+- [C# — What Is C# & .NET?](https://learnmasterypath.com/csharp-mastery-path/level-1/01-what-is-csharp-dotnet/)
 
 ## Exercise
 

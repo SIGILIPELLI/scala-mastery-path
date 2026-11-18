@@ -166,9 +166,9 @@ actually trigger.
 
 ## 🔀 See this in another language
 
-- [Dart — Async Basics](https://sigilipelli.github.io/dart-mastery-path/level-1/08-async-basics/)
-- [Python — Error Handling Basics](https://sigilipelli.github.io/python-mastery-path/level-1/08-error-handling/)
-- [C# — LINQ Basics](https://sigilipelli.github.io/csharp-mastery-path/level-1/08-linq-basics/)
+- [Dart — Async Basics](https://learnmasterypath.com/dart-mastery-path/level-1/08-async-basics/)
+- [Python — Error Handling Basics](https://learnmasterypath.com/python-mastery-path/level-1/08-error-handling/)
+- [C# — LINQ Basics](https://learnmasterypath.com/csharp-mastery-path/level-1/08-linq-basics/)
 
 ## Exercise
 

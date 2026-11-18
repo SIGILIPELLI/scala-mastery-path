@@ -167,9 +167,9 @@ indexing into a `List`.
 
 ## 🔀 See this in another language
 
-- [Dart — Classes & Objects Basics](https://sigilipelli.github.io/dart-mastery-path/level-1/06-classes-objects/)
-- [Python — Strings & Formatting](https://sigilipelli.github.io/python-mastery-path/level-1/06-strings-formatting/)
-- [C# — Collections](https://sigilipelli.github.io/csharp-mastery-path/level-1/06-collections/)
+- [Dart — Classes & Objects Basics](https://learnmasterypath.com/dart-mastery-path/level-1/06-classes-objects/)
+- [Python — Strings & Formatting](https://learnmasterypath.com/python-mastery-path/level-1/06-strings-formatting/)
+- [C# — Collections](https://learnmasterypath.com/csharp-mastery-path/level-1/06-collections/)
 
 ## Exercise
 

@@ -165,9 +165,9 @@ compiles to a single `MODULE$` instance).
 
 ## 🔀 See this in another language
 
-- [Dart — Null Safety Basics](https://sigilipelli.github.io/dart-mastery-path/level-1/07-null-safety-basics/)
-- [Python — File I/O Basics](https://sigilipelli.github.io/python-mastery-path/level-1/07-file-io/)
-- [C# — Exception Handling](https://sigilipelli.github.io/csharp-mastery-path/level-1/07-exception-handling/)
+- [Dart — Null Safety Basics](https://learnmasterypath.com/dart-mastery-path/level-1/07-null-safety-basics/)
+- [Python — File I/O Basics](https://learnmasterypath.com/python-mastery-path/level-1/07-file-io/)
+- [C# — Exception Handling](https://learnmasterypath.com/csharp-mastery-path/level-1/07-exception-handling/)
 
 ## Exercise
 

@@ -160,9 +160,9 @@ happens after the recursive call returns) at compile time instead of as a
 
 ## 🔀 See this in another language
 
-- [Dart — Functions](https://sigilipelli.github.io/dart-mastery-path/level-1/04-functions/)
-- [Python — Functions & Scope](https://sigilipelli.github.io/python-mastery-path/level-1/04-functions-scope/)
-- [C# — Methods & Functions](https://sigilipelli.github.io/csharp-mastery-path/level-1/04-methods-functions/)
+- [Dart — Functions](https://learnmasterypath.com/dart-mastery-path/level-1/04-functions/)
+- [Python — Functions & Scope](https://learnmasterypath.com/python-mastery-path/level-1/04-functions-scope/)
+- [C# — Methods & Functions](https://learnmasterypath.com/csharp-mastery-path/level-1/04-methods-functions/)
 
 ## Exercise
 

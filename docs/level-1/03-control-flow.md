@@ -163,9 +163,9 @@ even though `for` and `foreach` read better.
 
 ## 🔀 See this in another language
 
-- [Dart — Control Flow](https://sigilipelli.github.io/dart-mastery-path/level-1/03-control-flow/)
-- [Python — Control Flow](https://sigilipelli.github.io/python-mastery-path/level-1/03-control-flow/)
-- [C# — Control Flow](https://sigilipelli.github.io/csharp-mastery-path/level-1/03-control-flow/)
+- [Dart — Control Flow](https://learnmasterypath.com/dart-mastery-path/level-1/03-control-flow/)
+- [Python — Control Flow](https://learnmasterypath.com/python-mastery-path/level-1/03-control-flow/)
+- [C# — Control Flow](https://learnmasterypath.com/csharp-mastery-path/level-1/03-control-flow/)
 
 ## Exercise
 

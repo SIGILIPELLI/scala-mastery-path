@@ -193,9 +193,9 @@ a runtime `MatchError`.
 
 ## 🔀 See this in another language
 
-- [Dart — Packages (pub, pubspec.yaml)](https://sigilipelli.github.io/dart-mastery-path/level-1/09-packages/)
-- [Python — Modules, Packages & pip](https://sigilipelli.github.io/python-mastery-path/level-1/09-modules-packages/)
-- [C# — File I/O & Working with Text](https://sigilipelli.github.io/csharp-mastery-path/level-1/09-file-io/)
+- [Dart — Packages (pub, pubspec.yaml)](https://learnmasterypath.com/dart-mastery-path/level-1/09-packages/)
+- [Python — Modules, Packages & pip](https://learnmasterypath.com/python-mastery-path/level-1/09-modules-packages/)
+- [C# — File I/O & Working with Text](https://learnmasterypath.com/csharp-mastery-path/level-1/09-file-io/)
 
 ## Exercise
 
