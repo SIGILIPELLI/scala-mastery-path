@@ -1,3 +1,7 @@
+---
+description: "Level 2 (Intermediate) of the free Scala Mastery Path. Move from small scripts to idiomatic, functional Scala — go deeper on OOP and pattern matching, work…"
+---
+
 # Level 2 · Intermediate <span class="level-badge">Building idiomatic Scala</span>
 
 Goal: move from small scripts to idiomatic, functional Scala — go deeper on

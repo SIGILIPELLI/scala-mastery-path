@@ -1,3 +1,7 @@
+---
+description: "Level 3 (Advanced) of the free Scala Mastery Path. Build real services — concurrent code with Futures, HTTP APIs, database access, and a deeper functional…"
+---
+
 # Level 3 · Advanced <span class="level-badge">Concurrency & services</span>
 
 Goal: build real services — concurrent code with Futures, HTTP APIs, database

@@ -1,3 +1,7 @@
+---
+description: "Level 4 (Master) of the free Scala Mastery Path. Operate at a production, master level — advanced functional programming, distributed systems with Akka…"
+---
+
 # Level 4 · Master <span class="level-badge">Production systems</span>
 
 Goal: operate at a production, master level — advanced functional
